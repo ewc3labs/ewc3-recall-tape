@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- net48, matching the reference implementation (OneMore) and, more importantly, matching
+         what is already on every Windows 10/11 machine. A student installing a study tool should
+         not have to install a runtime first. -->
+    <TargetFramework>net48</TargetFramework>
+    <PlatformTarget>x64</PlatformTarget>
+    <LangVersion>latest</LangVersion>
+    <AssemblyName>RecallTape.OneNote</AssemblyName>
+    <RootNamespace>RecallTape.OneNote</RootNamespace>
+    <ComVisible>false</ComVisible>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <Version>0.0.1</Version>
+    <Company>EWC3 Labs</Company>
+    <Product>RecallTape</Product>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- net48 reference assemblies without requiring Visual Studio on the build box. -->
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Microsoft.CSharp is what makes `dynamic` work against the late-bound OneNote Application. -->
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+  </ItemGroup>
+
+</Project>

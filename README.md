@@ -66,8 +66,9 @@ and no second app to sync.
 
 ## Status
 
-**Pre-alpha. Nothing to install yet.** This repo currently holds the design, the platform research,
-and the origin story. Watch or star if you want to know when there's a build.
+**Pre-alpha. Nothing to install yet.** The design, the platform research, and the origin story are
+here; a first add-in build is being spiked against real OneNote now. Watch or star if you want to know
+when there's something to install.
 
 ## How it's built
 
@@ -78,10 +79,24 @@ That's a deliberate choice, not a default. Microsoft's modern Office.js add-in A
 the web**, which is not where lecture notes get taken with a pen. The desktop API is older and weirder
 and it's the one that can actually reach your ink.
 
+It's also narrower than the documentation suggests. On current Office builds OneNote no longer answers
+*external* programs at all — scripts and standalone tools get an object that fails every call. The API
+is reachable **only from a registered add-in**, which is why RecallTape ships as one: a signed installer
+and a ribbon, not a script you run. That single constraint shapes most of the engineering, and it was
+found by measurement rather than by reading docs — the [receipts are in the
+repo](docs/RAG_Sessions/2026-08-12_OneNote_Desktop_COM_External_Automation_Returns_E_FAIL_On_Current_Channel.md).
+
+The add-in itself runs **outside** OneNote, in a COM surrogate process. If RecallTape ever crashes, it
+takes down a `dllhost.exe` and OneNote keeps running with your notes intact. Given what this tool
+touches, that isn't a detail.
+
 We are standing on [**OneMore**](https://github.com/stevencohn/OneMore) by
 [Steven Cohn](https://github.com/stevencohn) — an excellent open-source OneNote add-in that already
-solved ribbon integration, hotkeys, and page XML manipulation. Building that plumbing again from
-scratch would have been foolish.
+solved ribbon integration, hotkeys, and page XML manipulation, and has been maintained against a
+shifting undocumented target for nine years. It is the best documentation this API has, because it's the
+one that actually runs. We use it as a **reference implementation** rather than a base: OneMore is
+MPL-2.0 and RecallTape is MIT, so we read it, learn from it, and write our own. Our read of how it works
+is public too, in [`docs/analysis/`](docs/analysis/onemore-onenote-interaction.md).
 
 The masking engine is kept deliberately host-agnostic, so OneNote is its *first* host rather than its
 only one:
@@ -91,6 +106,9 @@ RecallTape.Core       the tape model — knows nothing about OneNote
 RecallTape.OneNote    page + selection adapters, XML, overlay rendering
 RecallTape.UI         ribbon, hotkeys, study controller
 ```
+
+Built on **.NET Framework 4.8** — already present on every Windows 10/11 machine, so installing
+RecallTape never means installing a runtime first.
 
 ## Origins
 
