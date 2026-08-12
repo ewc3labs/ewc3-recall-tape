@@ -14,13 +14,13 @@
 
 ---
 
-AsOf: 2026-08-12
+AsOf: 2026-08-12 (end of first session)
 
 ## Current Focus
 
-1. `RT-03` — in flight
-2. `RT-04` — next
-3. `RT-07` — blocked on Paul
+1. `RT-03` — next up; nothing written yet, this is the first code that touches a real page
+2. `RT-04` — follows RT-03
+3. `RT-07` — blocked on Paul; needs two machines and one shared notebook, both of which now exist
 
 ## Delivery Index
 
@@ -30,7 +30,7 @@ AsOf: 2026-08-12
 | RT-02 | 💨 proven | Add-in loads, reads page XML | 1d | — | proven 2026-08-12 |
 | RT-03 | ⬜ planned | Cover a selection and uncover it | 2d | — | Phase 0 exit criterion — first write to a real page |
 | RT-04 | ⬜ planned | Region overlay over images and printouts | 3d | — | Paul's primary use case |
-| RT-05 | ⬜ planned | Cluster InkDrawing boxes to tape handwriting | 3d | — | no InkWord exists; we segment it ourselves |
+| RT-05 | ⬜ planned | Cluster InkDrawing boxes to tape handwriting | 3d | — | confirmed 2026-08-12 — zero InkWord in 11,708 strokes |
 | RT-06 | ⬜ planned | Image occlusion driven by OCRToken boxes | 3d | — | pending RT-04 |
 | RT-07 | 🟧 blocked | Does objectID survive a sync round-trip | 1d | — | blocked on Paul — needs 2 machines, 1 notebook |
 | RT-08 | ⬜ planned | Progress feedback for long operations | 1d | — | Survey looks frozen on a big notebook |

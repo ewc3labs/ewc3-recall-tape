@@ -79,8 +79,11 @@ search the roadmap **including Parked / Retired** — the same thing gets notice
 - [x] Survey Notebooks gives no feedback and looks frozen on a large notebook — [RT-08] minted in roadmap to address
 - [x] Gemini's suggestion of a click-through overlay window is wrong for tape, right for the mascot — [RT-09] minted in roadmap to address
 - [x] PLAN.md phase order is inverted relative to real notes — [RT-10] minted in roadmap to address
-- [ ] Zero `InkWord` in 79 real pages. Build, setting, or an artifact of copying the notebook? Needs a
-      *Survey Notebooks* run against a live notebook on Paul's Surface to tell which.
+- [x] Zero `InkWord` in 79 real pages — **answered 2026-08-12.** Paul added a page written specifically
+      to force one; the survey went 79 -> 80 pages, +23 `InkDrawing`, +2 `T`, and **still zero
+      `InkWord`**. It is the build, not the copy: modern OneNote does not emit the element. Ink-to-Text
+      lands in `one:T`, which the text path already covers. Folded into [RT-05], which is now a
+      confirmed cost rather than a maybe.
 - [ ] Do `OCRToken` coordinates share the page coordinate space or are they image-relative? Must be
       settled before any overlay is placed from them.
 - [ ] `Ctrl+Alt+T` collides with `AltGr` on Italian/UK keyboard layouts — check before it reaches a README.
