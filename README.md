@@ -14,6 +14,7 @@ that OneNote never shipped.
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Status: pre-alpha](https://img.shields.io/badge/status-pre--alpha-orange.svg)](#status)
 [![Made by EWC3 Labs](https://img.shields.io/badge/EWC3-Labs-1f6feb.svg)](https://github.com/ewc3labs)
+[![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-ffdd00?logo=buymeacoffee&logoColor=black)](https://www.buymeacoffee.com/ewc3labs)
 
 </div>
 
@@ -124,6 +125,22 @@ architecture argument, and the part where a salad fork became a required feature
 
 Not yet, but soon — the structure has to land first. When it opens up, see
 [`CONTRIBUTING.md`](CONTRIBUTING.md). Issues and ideas are welcome any time.
+
+## Support this project
+
+RecallTape is free, open source, and always will be — no paywalls, no premium tier, no "unlock ink
+masking for $4.99."
+
+If it saves you time before an exam, you can [**buy me a coffee**](https://www.buymeacoffee.com/ewc3labs).
+Entirely optional, and genuinely appreciated.
+
+☕ **[buymeacoffee.com/ewc3labs](https://www.buymeacoffee.com/ewc3labs)**
+
+Free ways to help that matter just as much:
+
+- **Star the repo** — it's most of how anyone finds a tool like this
+- **File an issue** when something breaks, especially with a page that reproduces it
+- **Tell someone who takes notes on a Surface**
 
 ## License
 

@@ -44,6 +44,8 @@ versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `docs/analysis/onenote-page-xml-shapes.md` — what OneNote page XML actually contains, measured.
 - `docs/project/` — roadmap and check-in punchlist (PMO-light, per the `ewc3labs-project-roadmap` skill).
 - `.editorconfig`, and `.gitattributes` replaced with the EWC3 Labs LF-everywhere policy.
+- `.github/FUNDING.yml` and a Support section — Buy Me a Coffee, plus the free ways to help.
+- GitHub About filled in: 14 discovery topics and an SEO-leading description.
 
 ### Changed
 - **Reversed the hand-declared-interop decision.** The add-in now references the real `Extensibility`
