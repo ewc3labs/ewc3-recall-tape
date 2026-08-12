@@ -123,6 +123,37 @@ notebook.
 
 Paul said as much himself before the data arrived — *"I'm often covering pictures and printouts."*
 
+## 5c. Text runs: OneNote splits at the selection boundary
+
+A `one:T` is a **text run, not a line**. Asking for `piSelection` makes OneNote materialise the
+selection as its own run:
+
+```xml
+<one:T selected="all"><![CDATA[<span style='background:black;mso-highlight:black'>WHOOMP! DE</span>]]></one:T>
+<one:T>            <![CDATA[<span style='background:black;mso-highlight:black'>RE IT IS!</span>]]></one:T>
+```
+
+One visual line, two runs, split exactly where the selection ended.
+
+**This makes character-level text taping free.** The run marked `selected="all"` *is* the characters the
+user picked, so there is no offset arithmetic and no need for start/end markers in the content -- an
+approach we considered and did not need.
+
+Rich text lives as HTML inside the CDATA: `<span style='...'>`, `<br />`. Styling a run means wrapping
+its CDATA in a span, which is purely additive -- removing the span restores the original byte for byte.
+
+**Trap:** a hand-made black-on-black using only `background` + `mso-highlight` appears to work, but only
+because the text was already black. Coloured text stays perfectly readable on the bar. `color` is what
+hides the glyphs; set all three.
+
+**Consequence for the design:** text tape needs no anchor. Restyled text *is* the text, so it reflows,
+re-wraps and moves with its container. The anchoring problem exists only in the positioned world.
+
+**Free interaction, and a leak:** selecting over taped text reveals it, because OneNote inverts colours
+on selection. That is a peek gesture for zero code -- and also means a stray drag or Ctrl+A reveals
+every answer on a page. Overlay tape has no equivalent gesture at all, so reveal is currently
+asymmetric between the two mechanisms.
+
 ## 6. The gift: OneNote already knows where every word in every image is
 
 `OCRToken` carries per-word geometry:

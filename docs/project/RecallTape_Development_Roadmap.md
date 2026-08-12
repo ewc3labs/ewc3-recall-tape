@@ -14,12 +14,12 @@
 
 ---
 
-AsOf: 2026-08-12 (end of first session)
+AsOf: 2026-08-12
 
 ## Current Focus
 
-1. `RT-03` — next up; nothing written yet, this is the first code that touches a real page
-2. `RT-04` — follows RT-03
+1. `RT-11` — next; reveal is asymmetric, text peeks on select and overlays do nothing
+2. `RT-04` — follows RT-11
 3. `RT-07` — blocked on Paul; needs two machines and one shared notebook, both of which now exist
 
 ## Delivery Index
@@ -28,7 +28,7 @@ AsOf: 2026-08-12 (end of first session)
 | --- | --- | --- | --: | --- | --- |
 | RT-01 | 💨 proven | Reach the OneNote API at all | 1d | — | proven 2026-08-12 |
 | RT-02 | 💨 proven | Add-in loads, reads page XML | 1d | — | proven 2026-08-12 |
-| RT-03 | ⬜ planned | Cover a selection and uncover it | 2d | — | Phase 0 exit criterion — first write to a real page |
+| RT-03 | 💨 proven | Cover a selection and uncover it | 2d | — | proven 2026-08-12 — Phase 0 exit criterion met |
 | RT-04 | ⬜ planned | Region overlay over images and printouts | 3d | — | Paul's primary use case |
 | RT-05 | ⬜ planned | Cluster InkDrawing boxes to tape handwriting | 3d | — | confirmed 2026-08-12 — zero InkWord in 11,708 strokes |
 | RT-06 | ⬜ planned | Image occlusion driven by OCRToken boxes | 3d | — | pending RT-04 |
@@ -36,6 +36,7 @@ AsOf: 2026-08-12 (end of first session)
 | RT-08 | ⬜ planned | Progress feedback for long operations | 1d | — | Survey looks frozen on a big notebook |
 | RT-09 | ⏸️ deferred | The Assistant, as a click-through overlay window | ? | — | deferred — after the tool works; name unresolved |
 | RT-10 | ⬜ planned | Re-sequence PLAN.md phases to match real notes | 0.5d | — | typed text is 892 of 13,708 elements |
+| RT-11 | ⬜ planned | Click-to-peek on overlay tape via Image hyperlink | 2d | — | text peeks on select for free; overlays do nothing |
 
 **States:** ⬜ `planned` · 🟦 `coded` · 💨 `proven` (actually run, not just built) · 🟩 `shipped` ·
 🟧 `blocked` · ⏸️ `deferred` · 🟥 `cancelled`
@@ -47,7 +48,7 @@ AsOf: 2026-08-12 (end of first session)
 
 | Series | Last Num | Series Description |
 | --- | --- | --- |
-| RT | RT-10 | RecallTape feature slices and fixes |
+| RT | RT-11 | RecallTape feature slices and fixes |
 
 ## Working Rules
 

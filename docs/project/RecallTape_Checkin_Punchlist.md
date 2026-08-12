@@ -84,6 +84,11 @@ search the roadmap **including Parked / Retired** — the same thing gets notice
       `InkWord`**. It is the build, not the copy: modern OneNote does not emit the element. Ink-to-Text
       lands in `one:T`, which the text path already covers. Folded into [RT-05], which is now a
       confirmed cost rather than a maybe.
+- [x] Reveal is asymmetric: taped text peeks when you select over it (OneNote inverts colours, free),
+      overlay images do nothing at all. A user reads that as "sometimes it works" — [RT-11] minted in
+      roadmap to address, using the `hyperlink` attribute the schema exposes on `Image`.
+- [ ] Select-to-peek on text is free, and also a leak — a stray drag or Ctrl+A reveals every answer on
+      the page. Feature, bug, or both? Needs a design call before the study loop is built.
 - [ ] Do `OCRToken` coordinates share the page coordinate space or are they image-relative? Must be
       settled before any overlay is placed from them.
 - [ ] `Ctrl+Alt+T` collides with `AltGr` on Italian/UK keyboard layouts — check before it reaches a README.

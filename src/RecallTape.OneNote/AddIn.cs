@@ -23,7 +23,7 @@ namespace RecallTape.OneNote
     [ComVisible(true)]
     [Guid("AA568A3C-2A53-479B-B188-2367D2E27CE4")]
     [ProgId("RecallTape.AddIn")]
-    public class AddIn : IDTExtensibility2, IRibbonExtensibility
+    public partial class AddIn : IDTExtensibility2, IRibbonExtensibility
     {
         // No cached Application, deliberately. Three approaches were tried and measured:
         //
@@ -79,6 +79,12 @@ namespace RecallTape.OneNote
   <ribbon>
     <tabs>
       <tab id='rtTab' label='RecallTape'>
+        <group id='rtTape' label='Tape'>
+          <button id='rtTapeSel' label='Tape' size='large'
+                  imageMso='HighlightColorPicker' onAction='TapeSelection'/>
+          <button id='rtUntape' label='Remove Tape' size='large'
+                  imageMso='ClearFormatting' onAction='RemoveTape'/>
+        </group>
         <group id='rtSpike' label='Spike'>
           <button id='rtDump' label='Dump Page XML' size='large'
                   imageMso='FileSaveAsCurrentFileFormat' onAction='DumpPage'/>
