@@ -1,10 +1,38 @@
-# OS/editor
+# ---- .NET / Visual Studio -------------------------------------------------
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+*.user
+*.suo
+*.userprefs
+.vs/
+*.dll
+*.pdb
+*.cache
+TestResults/
+BenchmarkDotNet.Artifacts/
+project.lock.json
+artifacts/
+
+# ---- Signing + secrets — NEVER commit these ------------------------------
+*.pfx
+*.snk
+*.p12
+signing/
+.env
+*.local.json
+
+# ---- Installer output ----------------------------------------------------
+dist/
+*.msi
+*.exe
+!assets/**/*.exe
+
+# ---- OS / editor ---------------------------------------------------------
 .DS_Store
 Thumbs.db
 .vscode/
-
-# Temporary export scratch
-exports/tmp/
-
-# OpenSCAD cache (if any)
-*.bak
+!.vscode/extensions.json

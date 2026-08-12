@@ -1,0 +1,18 @@
+* text=auto eol=lf
+
+*.sln       text eol=crlf
+*.csproj    text eol=crlf
+*.props     text eol=crlf
+*.targets   text eol=crlf
+*.ps1       text eol=crlf
+*.cmd       text eol=crlf
+*.bat       text eol=crlf
+
+*.png  binary
+*.jpg  binary
+*.gif  binary
+*.ico  binary
+*.wav  binary
+*.mp3  binary
+*.snk  binary
+*.pfx  binary

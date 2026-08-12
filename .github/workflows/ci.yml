@@ -1,0 +1,100 @@
+name: CI
+
+# RecallTape is a Windows COM add-in for desktop OneNote, so CI runs on windows-latest.
+# There is no solution to build yet (pre-alpha); the build/test steps are guarded so this
+# workflow is useful from day one and turns into a real gate the moment src/ appears.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build & test (Windows)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Look for a solution
+        id: probe
+        shell: pwsh
+        run: |
+          $sln = Get-ChildItem -Path . -Filter *.sln -Recurse -ErrorAction SilentlyContinue |
+                 Select-Object -First 1
+          if ($sln) {
+            "found=true"           | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+            "path=$($sln.FullName)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+            Write-Host "Solution: $($sln.FullName)"
+          } else {
+            "found=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+            Write-Host "No solution yet — pre-alpha. Skipping build and test."
+          }
+
+      - name: Restore
+        if: steps.probe.outputs.found == 'true'
+        run: dotnet restore "${{ steps.probe.outputs.path }}"
+
+      - name: Build
+        if: steps.probe.outputs.found == 'true'
+        run: dotnet build "${{ steps.probe.outputs.path }}" --configuration Release --no-restore
+
+      - name: Test
+        if: steps.probe.outputs.found == 'true'
+        run: dotnet test "${{ steps.probe.outputs.path }}" --configuration Release --no-build --verbosity normal
+
+  hygiene:
+    name: Repo hygiene
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Cheap guard with real teeth: this repo will eventually hold a code-signing story, and a
+      # committed certificate is the kind of mistake that is only ever found afterwards.
+      - name: No signing material committed
+        shell: bash
+        run: |
+          if git ls-files | grep -Ei '\.(pfx|snk|p12)$'; then
+            echo "::error::Signing material is committed. Remove it and rotate the certificate."
+            exit 1
+          fi
+          echo "OK — no signing material tracked."
+
+      - name: Required docs present
+        shell: bash
+        run: |
+          missing=0
+          for f in README.md LICENSE CHANGELOG.md AGENTS.md docs/PLAN.md; do
+            [ -f "$f" ] || { echo "::error::missing $f"; missing=1; }
+          done
+          exit $missing
+
+      - name: Markdown links are not obviously broken
+        shell: bash
+        run: |
+          # Local links only — no network. Catches renamed/moved docs, which is the common case.
+          bad=0
+          while IFS= read -r f; do
+            while IFS= read -r target; do
+              case "$target" in http*|"#"*|mailto:*) continue ;; esac
+              clean="${target%%#*}"
+              [ -z "$clean" ] && continue
+              dir=$(dirname "$f")
+              [ -e "$dir/$clean" ] || { echo "::error file=$f::broken link -> $target"; bad=1; }
+            done < <(grep -oE ']\([^)]+\)' "$f" | sed 's/^](//; s/)$//')
+          done < <(git ls-files '*.md')
+          exit $bad
