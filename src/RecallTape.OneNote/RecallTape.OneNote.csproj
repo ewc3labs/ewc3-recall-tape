@@ -22,8 +22,38 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Microsoft.CSharp is what makes `dynamic` work against the late-bound OneNote Application. -->
-    <Reference Include="Microsoft.CSharp" />
+    <!-- The real Extensibility PIA, embedded.
+
+         EmbedInteropTypes=True compiles the interface definitions in, so there is NO runtime
+         dependency and nothing to redistribute - only the build box needs the file, and it ships
+         with .NET Framework in the GAC.
+
+         WHY not hand-declare it: we tried. Correct IID (byte-verified against MSADDNDR.OLB), dual
+         interface, methods in typelib order with explicit DispIds, and even [TypeIdentifier] for COM
+         type equivalence. OneNote still constructed the class in the surrogate and never called
+         OnConnection. The PIA is the only thing that makes the add-in contract work.
+
+         HintPath because SDK-style projects do not probe the GAC. -->
+    <Reference Include="Extensibility">
+      <HintPath Condition="Exists('$(CommonProgramFiles)\Microsoft Shared\MSEnv\PublicAssemblies\extensibility.dll')">$(CommonProgramFiles)\Microsoft Shared\MSEnv\PublicAssemblies\extensibility.dll</HintPath>
+      <HintPath Condition="!Exists('$(CommonProgramFiles)\Microsoft Shared\MSEnv\PublicAssemblies\extensibility.dll')">$(WinDir)\assembly\GAC\Extensibility\7.0.3300.0__b03f5f7f11d50a3a\Extensibility.dll</HintPath>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+      <Private>False</Private>
+    </Reference>
+
+    <!-- The OneNote PIA, embedded. Same reasoning as Extensibility above, plus: `dynamic` cannot
+         be used against the OneNote Application at all. The C# dynamic COM binder calls
+         IDispatch::GetTypeInfo to enumerate members first, and OneNote returns E_FAIL to that from
+         inside the surrogate, so the call fails before reaching any OneNote method. The typed
+         interface binds through the vtable instead. -->
+    <!-- NOT embedded, and copied local: IApplication in this PIA is not marked ComImport, so the
+         compiler refuses to embed it (CS1756). OneMore references it the same way and ships the DLL
+         beside the add-in. -->
+    <Reference Include="Microsoft.Office.Interop.OneNote">
+      <HintPath>$(WinDir)\assembly\GAC_MSIL\Microsoft.Office.Interop.OneNote\15.0.0.0__71e9bce111e9429c\Microsoft.Office.Interop.OneNote.dll</HintPath>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
   </ItemGroup>

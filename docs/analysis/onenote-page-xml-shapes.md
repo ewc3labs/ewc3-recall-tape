@@ -1,0 +1,151 @@
+# What OneNote page XML actually contains
+
+> **Receipts for the Phase 0 spike.** Everything here was measured on 2026-08-12 against real pages
+> through the RecallTape add-in — a synthetic test page, and 79 pages of Paul's real medical-school
+> notebook. Office 16.0.20228.20158, Current Channel, x64, schema `xs2013`.
+>
+> Raw survey output: [`onenote-content-survey-raw.txt`](onenote-content-survey-raw.txt).
+> How we can reach the API at all:
+> [`onemore-onenote-interaction.md`](onemore-onenote-interaction.md).
+
+---
+
+## 1. Selection is fully identifiable
+
+`selected` is **not** boolean. It is `none | partial | all`, per the schema:
+
+> *none: no selection on this object or any of its children*
+> *partial: this object contains at least one selected object*
+> *all: this object is selected (or all its children are selected)*
+
+So finding the selection is a descent, not a scan:
+
+```text
+Page      selected="partial"
+└─ Outline    selected="partial"
+   └─ OEChildren selected="partial"
+      └─ OE        selected="partial"
+         └─ T         selected="all"     "This is a Markdown heading"
+```
+
+**Anything checking `selected == "true"` finds nothing, silently, forever.**
+
+## 2. There are two anchor worlds
+
+This is the finding that changes the design.
+
+```mermaid
+flowchart TD
+    P["one:Page"] --> O["one:Outline<br/>Position(x,y,z) + Size"]
+    P --> INK["one:InkDrawing ×N<br/>Position(x,y,z) + Size<br/>+ CallbackID"]
+    P --> IMG["one:Image<br/>Position(x,y,z) + Size<br/>+ CallbackID + OCRData"]
+    O --> OEC["one:OEChildren"]
+    OEC --> OE["one:OE"]
+    OE --> T["one:T<br/><b>no position of its own</b>"]
+
+    style T fill:#8b5cf622,stroke:#8b5cf6
+    style INK fill:#1f6feb22,stroke:#1f6feb
+    style IMG fill:#1f6feb22,stroke:#1f6feb
+```
+
+**Flow content** — typed text — lives *inside* an `Outline`. The `T` has no coordinates; OneNote lays
+it out. Masking it means acting on the content.
+
+**Positioned content** — ink and images — lives at **page level**, each with absolute
+`Position(x, y, z)` and `Size(width, height)`. Masking it means acting on coordinates.
+
+`docs/design/architecture.md` modelled `Tape.anchor` as one thing. **It is two.** A design that only
+anchors into content cannot mask an image, and a design that only anchors to coordinates cannot follow
+reflowing text.
+
+## 3. The tape mechanism: a positioned Image at the top of the z-stack
+
+There is **no `one:Shape`** in the schema — no rectangle, ellipse, or line element. The only way to put
+an opaque region over arbitrary content is an `<one:Image>`:
+
+```xml
+<one:Image>
+  <one:Position x="198.0" y="464.4" z="22"/>
+  <one:Size width="96.0" height="96.0"/>
+  <one:Data>{base64 PNG}</one:Data>
+</one:Image>
+```
+
+`z` is dense and ordered — on the test page ink occupied `z=1..20` and an image `z=21`, so tape goes at
+`z=22`. This is native, it persists in the page, and it syncs.
+
+## 4. Ink: many small drawings, and the strokes are not inline
+
+One lasso-selected doodle came back as **19 separate `InkDrawing` elements**, each with its own
+`objectID`, `Position` and `Size`. Union bounding box: `x=70.5, y=293.4, 519.0 × 81.4`.
+
+**Masking ink is bounding-box arithmetic, not stroke manipulation.** Each element carries only a
+`CallbackID`; the stroke bytes come separately via `GetBinaryPageContent`. That is why the same page is
+12 KB without binary data and 50 KB with it.
+
+**We never touch ink data to mask ink.** Non-destructive by construction rather than by discipline.
+
+## 5. What real notes are made of — 79 pages of Paul's notebook
+
+| Element | Count | Note |
+| --- | ---: | --- |
+| `InkDrawing` | **11,685** | his handwriting |
+| `InkWord` | **0** | — |
+| `InkParagraph` | **0** | — |
+| `Image` | 1,131 | ~14 per page |
+| `Image` with `OCRData` | 1,061 | 94% |
+| `OCRToken` | **92,558** | |
+| `T` (typed text) | 892 | |
+| `XPSFile` | 29 | printouts |
+| `Table` | 1 | |
+
+Two conclusions, both load-bearing.
+
+### 5a. Handwriting recognition is absent
+
+**Zero `InkWord` across 11,685 ink elements**, so `recognizedText` is not available. "Tape all
+handwriting" must cluster `InkDrawing` bounding boxes ourselves — no free word or line segmentation.
+
+`InkWord` is *not* the Ink-to-Text command. Ink-to-Text produces a plain `<one:T>`, which the text path
+already handles. `InkWord` is ink that stays ink but which OneNote classified as a **word** rather than
+a **drawing** — the schema gives it `Space` and `EndOfLine` children, while `InkDrawing` gets
+`ShapeInfo`. On this build, with these users, OneNote classified everything as drawing.
+
+**Unresolved:** whether that is the build, a setting, or an artifact of the notebook having been copied.
+Cheap test: run *Survey Notebooks* against a live notebook on a Surface. Until then, design for
+`InkDrawing` and treat `InkWord` as a bonus.
+
+### 5b. The notebook is ink and images. Typed text is a rounding error.
+
+892 typed elements against 11,685 ink and 1,131 images. **`PLAN.md`'s phase order was backwards for the
+actual user**: Phase 1 was typed-text taping, Phase 2 was ink and regions. Phase 2 is his entire
+notebook.
+
+Paul said as much himself before the data arrived — *"I'm often covering pictures and printouts."*
+
+## 6. The gift: OneNote already knows where every word in every image is
+
+`OCRToken` carries per-word geometry:
+
+| Attribute | |
+| --- | --- |
+| `x`, `y`, `width`, `height` | bounding box within the image |
+| `line`, `region` | reading-order grouping |
+| `startPos` | offset into the sibling `OCRText` |
+
+**92,558 tokens, across 94% of his images.** Every lecture slide and printout has already been OCR'd
+with a box per word.
+
+Image occlusion — the Goodnotes feature Paul actually wants — becomes tractable: offer *"tape this term
+on the slide"* and place the overlay at coordinates OneNote supplied, instead of making the user draw
+rectangles. It also restores the Anki path that 5a took away: the content under tape on a printout is
+**known text**, even though handwriting is not.
+
+## Open questions this raises
+
+- Does `objectID` survive a sync round-trip between two machines? That decides whether it is a durable
+  `Tape.anchor` or whether tape orphans itself. A shared notebook makes this testable.
+- Does `InkWord` ever appear on a live pen-first notebook?
+- What does `UpdatePageContent` do to `z` ordering and layout when an `Image` is inserted at page level?
+- Do `OCRToken` coordinates share the page coordinate space, or are they image-relative? (Almost
+  certainly image-relative — needs confirming before any overlay is placed from them.)

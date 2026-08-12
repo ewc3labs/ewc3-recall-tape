@@ -31,11 +31,37 @@ versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `docs/PLAN.md`: **reference implementation only**, since MPL-2.0 file-level copyleft would follow any
   forked file permanently.
 
+### Proven
+- **The add-in reads real page XML.** Full lifecycle (ctor, `OnConnection`, `GetCustomUI`,
+  `OnStartupComplete`, `OnDisconnection`) plus `GetPageContent` and `GetHierarchy`, verified against a
+  synthetic page and 79 pages of a real medical-school notebook.
+- **The platform bet holds.** `CoCreateInstance` returns a dead object to an external process and a live
+  one from inside a OneNote-spawned surrogate — the gate is on the caller, not the API.
+
+### Added
+- `SurveyNotebooks` command — walks every open notebook and reports content-type totals, structural
+  skeletons, and `recognizedText` samples.
+- `docs/analysis/onenote-page-xml-shapes.md` — what OneNote page XML actually contains, measured.
+- `docs/project/` — roadmap and check-in punchlist (PMO-light, per the `ewc3labs-project-roadmap` skill).
+- `.editorconfig`, and `.gitattributes` replaced with the EWC3 Labs LF-everywhere policy.
+
+### Changed
+- **Reversed the hand-declared-interop decision.** The add-in now references the real `Extensibility`
+  and `Microsoft.Office.Interop.OneNote` PIAs. Hand-declared COM interfaces — correct IID, dual layout,
+  typelib method order, explicit DispIds, `[TypeIdentifier]` — are constructed by OneNote and then
+  never called. `dynamic` fails separately, on `IDispatch::GetTypeInfo`.
+- Application object is acquired per operation via `new Application()` and released immediately, rather
+  than caching the one passed to `OnConnection` (which prevents OneNote shutting down).
+- `docs/PLAN.md` flagged: phase order is inverted relative to real notes (892 typed elements vs 11,685
+  ink and 1,131 images). Re-sequencing tracked as `RT-10`.
+
 ### Known Issues
-- **OneNote no longer serves external COM automation clients** on Office 16.0.20228 (Current Channel).
-  The add-in path is the only way in; there is no scripting fallback.
-- The spike add-in is constructed by OneNote inside the surrogate, but `OnConnection` is never called.
-- A `GetPageContent` round-trip from inside the surrogate is **not yet proven** on this build.
+- `UpdatePageContent` is not yet exercised by our own code — nothing here can write to a page (`RT-03`).
+- **Zero `InkWord` in 11,685 real ink elements**, so `recognizedText` is unavailable and handwriting
+  masking must cluster `InkDrawing` bounding boxes. Unclear whether that is the build, a setting, or an
+  artifact of the notebook having been copied.
+- Long operations give no progress feedback and look frozen (`RT-08`).
+- The COM surrogate holds the built DLL open; OneNote must be closed before a rebuild.
 
 ### Notes
 - Pre-alpha. No installable build yet.

@@ -46,9 +46,9 @@ durable insight is found living only in agent memory, promote it here and reduce
    - External OneNote automation is dead on this build — no ROT registration, every method returns `E_FAIL`
    - RecallTape ships as a COM add-in registered into a surrogate; **no external-automation fallback exists to design around**
    - Target `net48`, not `net8.0` — already present on every Windows box, so no runtime install for a student
-   - Hand-declare the COM interfaces; no Windows SDK on the build box, no redistributed PIAs
+   - **Use the real Office PIAs.** Hand-declared COM interfaces are constructed by OneNote and then never called; `dynamic` fails on `IDispatch::GetTypeInfo`. This reverses the original decision, and the reversal was expensive
    - OneMore is **MPL-2.0** vs our MIT — reference implementation only, never a source of files
-   - **Open/blocking**: a page round-trip from inside the surrogate is still unproven
+   - **Resolved same day**: the round-trip works from inside the surrogate; only the *caller* is gated
 
 ### Superseded Sessions (Historical Traceability)
 
@@ -69,10 +69,8 @@ convey *what happened and when* without opening anything. Be generous — prefer
 `2026-08-12_OneNote_Desktop_COM_External_Automation_Returns_E_FAIL_On_Current_Channel.md` over
 `2026-08-12_com_notes.md`. Never trade scannability for brevity.
 
-> **Convention conflict, unresolved:** HQ `AGENTS.md` currently specifies `docs/RAG_sessions/` with
-> `YYYYMMDD_with_descriptive_summary_text.md`. The `ewc3labs-agent-rag-system` skill specifies
-> `docs/RAG_Sessions/` with `YYYY-MM-DD_Descriptive_Title.md`. This repo follows the **skill**. Casing
-> matters to git and to Linux CI even though Windows shrugs, so the two should be reconciled to one
+> **Convention resolved 2026-08-12:** `docs/RAG_Sessions/` with `YYYY-MM-DD_Descriptive_Title.md`,
+> per the `ewc3labs-agent-rag-system` skill. HQ `AGENTS.md` was updated to match, so there is one
 > convention across EWC3 Labs.
 
 ---
@@ -102,7 +100,10 @@ convey *what happened and when* without opening anything. Be generous — prefer
 - [`AGENTS.md`](../../AGENTS.md) — repo contract and decided-vs-open questions
 - [`docs/PLAN.md`](../PLAN.md) — phased roadmap and non-negotiables
 - [`docs/design/`](../design/) — architecture, and **why**
-- [`docs/analysis/`](../analysis/) — investigation and current-state evidence
+- [`docs/analysis/`](../analysis/) — investigation and current-state evidence, notably
+  [`onenote-page-xml-shapes.md`](../analysis/onenote-page-xml-shapes.md) (what the API actually returns)
+  and [`onemore-onenote-interaction.md`](../analysis/onemore-onenote-interaction.md)
+- [`docs/project/`](../project/) — roadmap and punchlist: where we are and what is next
 
 **Durable historical context:**
 

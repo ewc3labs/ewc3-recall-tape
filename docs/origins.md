@@ -1,4 +1,4 @@
-# The stroried origin of RecallTape
+# The storied origin of RecallTape
 
 ---
 

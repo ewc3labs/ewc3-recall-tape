@@ -197,16 +197,27 @@ produces the identical pair and works.**
 
 ## 🔜 Follow-Up Work
 
-- [ ] **BLOCKING: prove a page round-trip works from inside the surrogate.** OneMore calls
-      `new Application()` — the same `CoCreateInstance` that returns `E_FAIL` externally. Either it
-      behaves differently inside a OneNote-spawned surrogate, or OneMore's page operations fail here too
-      and nobody has noticed because the failure is logged and swallowed. **Cheapest test: run any
-      OneMore command that reads the current page, then read `%TEMP%\OneMore.log`.** Until this passes,
-      the platform assumption is *unproven*.
-- [ ] Fix the remaining spike bug: our class is constructed in `dllhost` (constructor logs) but
-      `OnConnection` is never called.
-- [ ] Then finish the original Phase 0 spike — dump page XML for typed text, **ink**, and an image with
-      a label; decide mask-in-place vs cover-object.
+- [x] ~~**BLOCKING: prove a page round-trip works from inside the surrogate.**~~ **Passed, same day.**
+      OneMore's `ConvertMarkdownCommand` — a read *and* a write — ran clean on this build, and our own
+      add-in then read real XML off 79 pages. The asymmetry is the finding: **`CoCreateInstance` returns
+      a dead object to an external process and the identical call works from inside a OneNote-spawned
+      surrogate.** `UpdatePageContent` is still only proven by OneMore's behaviour, not our own code;
+      `RT-03` closes that.
+- [x] ~~Fix the spike bug: class constructed but `OnConnection` never called.~~ **Root cause:
+      hand-declared COM interfaces do not satisfy Office's add-in contract.** Correct IID
+      (byte-verified against the typelib), dual layout, typelib method order, explicit DispIds, even
+      `[TypeIdentifier]` for COM type-equivalence — every check passed and the whole thing still failed.
+      Only the real embedded `Extensibility` PIA works. Two further traps followed, each failing
+      differently and none loudly:
+      `dynamic` throws `E_FAIL` inside `GetITypeInfoFromIDispatch` because the C# COM binder wants
+      `IDispatch::GetTypeInfo` and OneNote refuses it; and casting to `IApplication` yields a *lazy*
+      `E_NOINTERFACE` — the cast appears to succeed, then throws on first member access — because
+      `IApplication` is not a `ComImport` type. The working forms are `ON.Application`, or better
+      `new ON.Application()`, which is what OneMore does exclusively.
+- [x] ~~Finish the original Phase 0 spike — page XML for typed text, ink, and an image.~~ Done; written
+      up with receipts in [`../analysis/onenote-page-xml-shapes.md`](../analysis/onenote-page-xml-shapes.md).
+      Headline: **two anchor worlds** (flow text vs positioned ink/images), tape is a positioned
+      `one:Image` at `z=max+1`, and **zero `InkWord` in 11,685 real ink elements**.
 - [ ] Adopt the ARM64 `LaunchPermission` SDDL — Surface devices are literally the target hardware.
 - [ ] Pre-register an EventLog source at install time, or the first error masks the real one.
 - [ ] **Do not** inherit OneMore's `UpdatePageContent(xml, DateTime.MinValue, xs2013, force: true)`.

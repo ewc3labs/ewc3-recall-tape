@@ -285,25 +285,30 @@ Stated explicitly, because an earlier version of this analysis over-claimed.
   version comes from `HKCR\OneNote.Application\CurVer`; the build number from `ONENOTE.EXE`'s file
   header. Both are local reads. No COM call is involved.
 
-**Not verified:** that a `GetPageContent` / `UpdatePageContent` round-trip actually succeeds on this
-build. Nothing in the observed startup sequence proves it.
+**Verified later the same day.** OneMore's `ConvertMarkdownCommand` — which reads the page *and* writes
+it back — ran clean on this build. Our own add-in then read real page XML off 79 pages of a real
+notebook. `GetPageContent` works; `UpdatePageContent` is proven by OneMore's behaviour, and by our own
+code once `RT-03` lands.
 
-This matters, because **external automation is measurably dead here**:
-`CoCreateInstance("OneNote.Application")` returns an object whose every method returns `E_FAIL` —
-including `GetSpecialLocation`, which touches no notebook — `Application.Windows` is null, and OneNote
-never registers in the ROT (`MK_E_UNAVAILABLE`). Excel and Word, same host and same script, answer
-normally.
+That result is worth stating precisely, because it is counter-intuitive. **External automation is
+measurably dead here:** `CoCreateInstance("OneNote.Application")` returns an object whose every method
+returns `E_FAIL` — including `GetSpecialLocation`, which touches no notebook — `Application.Windows` is
+null, and OneNote never registers in the ROT (`MK_E_UNAVAILABLE`). Excel and Word, same host and same
+script, answer normally.
 
-And OneMore reaches OneNote through **`new Application()` — that same `CoCreateInstance`.** So one of
-these must be true:
+And OneMore reaches OneNote through **`new Application()` — that same `CoCreateInstance`**, and it
+works. So:
 
-1. the call behaves differently from inside a OneNote-spawned surrogate, or
-2. OneMore's page operations fail on this build too, and nobody has noticed because the failure is
-   logged and swallowed.
+> **The identical call returns a dead object to an external process and a live one from inside a
+> OneNote-spawned add-in surrogate.** Whatever gate Microsoft added, it is on the *caller*, not the API.
 
-**The deciding experiment is one click:** run any OneMore command that reads the current page, then read
-`%TEMP%\OneMore.log`. Until that is done, treat RecallTape's platform assumption as **unproven** rather
-than merely un-restated.
+That is the single most important fact about this platform, and it is why RecallTape has no scripting
+fallback to design around.
+
+**Corollary we paid for:** the surrogate only accepts the real PIA types. A hand-declared
+`IDTExtensibility2` with the correct IID, dual layout, typelib method order, explicit DispIds and
+`[TypeIdentifier]` is constructed by OneNote and then never called. `dynamic` fails too — the C# COM
+binder needs `IDispatch::GetTypeInfo`, which OneNote refuses. Use the PIAs.
 
 ---
 

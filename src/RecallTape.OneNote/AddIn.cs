@@ -1,3 +1,5 @@
+using Extensibility;
+using ON = Microsoft.Office.Interop.OneNote;
 using System;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -16,29 +18,29 @@ namespace RecallTape.OneNote
     /// automation clients. CoCreateInstance("OneNote.Application") returns an object whose every
     /// method fails E_FAIL, and OneNote never registers in the Running Object Table. The add-in
     /// path is intact because OneNote calls IN to us at OnConnection holding a live Application
-    /// pointer -- we never activate anything. See docs/analysis/ for the full evidence.
+    /// pointer. See docs/analysis/ and docs/RAG_Sessions/ for the evidence.
     /// </summary>
-    // NOTE: no [ClassInterface] attribute, deliberately -- the default (AutoDispatch) is what the
-    // known-good reference implementation uses. Reflecting over River.OneMoreAddIn.AddIn shows
-    // exactly three attributes: ComVisible, Guid, ProgId. Specifying ClassInterfaceType.None here
-    // made OneNote demote LoadBehavior 3 -> 2 without ever calling OnConnection.
     [ComVisible(true)]
     [Guid("AA568A3C-2A53-479B-B188-2367D2E27CE4")]
     [ProgId("RecallTape.AddIn")]
     public class AddIn : IDTExtensibility2, IRibbonExtensibility
     {
-        // The Application pointer OneNote hands us. Late-bound on purpose: the typed PIA would
-        // mean redistributing interop assemblies, and this spike needs four methods.
-        private dynamic onenote;
+        // No cached Application, deliberately. Three approaches were tried and measured:
+        //
+        //   dynamic                      E_FAIL in GetITypeInfoFromIDispatch -- the C# dynamic COM
+        //                                binder needs IDispatch::GetTypeInfo, which OneNote refuses.
+        //   cast OnConnection's object   E_NOINTERFACE on IApplication {A47D3223-...}. The cast
+        //                                appears to succeed because QI is lazy, then throws on first
+        //                                member access. The object registers as "Application2 Class".
+        //   new ON.Application()         WORKS. Constructs through the PIA coclass, which wires the
+        //                                interfaces correctly.
+        //
+        // This is also what OneMore does exclusively, and for a second reason worth honouring:
+        // holding the OnConnection reference across the process boundary stops OneNote shutting
+        // down. Acquire late, release early, never cache.
 
-        private static readonly string LogDir =
-            Path.Combine(Path.GetTempPath(), "RecallTape");
+        private static readonly string LogDir = Path.Combine(Path.GetTempPath(), "RecallTape");
 
-        /// <summary>
-        /// Logs purely so that "OneNote never instantiated us" and "OneNote instantiated us but
-        /// never called OnConnection" are distinguishable. Without this the two failure modes look
-        /// identical from outside: LoadBehavior 3 -> 2 and an empty log directory.
-        /// </summary>
         public AddIn()
         {
             Log("ctor: instantiated, pid=" + System.Diagnostics.Process.GetCurrentProcess().Id
@@ -52,8 +54,9 @@ namespace RecallTape.OneNote
             try
             {
                 Directory.CreateDirectory(LogDir);
-                onenote = Application;
-                Log("OnConnection mode=" + ConnectMode + " application=" + (Application == null ? "NULL" : "ok"));
+                // Deliberately NOT keeping this reference -- see the note above.
+                Log("OnConnection mode=" + ConnectMode
+                    + " application=" + (Application == null ? "NULL" : "provided (not retained)"));
             }
             catch (Exception ex) { Log("OnConnection FAILED: " + ex); }
         }
@@ -61,7 +64,6 @@ namespace RecallTape.OneNote
         public void OnDisconnection(ext_DisconnectMode RemoveMode, ref Array custom)
         {
             Log("OnDisconnection " + RemoveMode);
-            onenote = null;
         }
 
         public void OnAddInsUpdate(ref Array custom) { }
@@ -80,6 +82,8 @@ namespace RecallTape.OneNote
         <group id='rtSpike' label='Spike'>
           <button id='rtDump' label='Dump Page XML' size='large'
                   imageMso='FileSaveAsCurrentFileFormat' onAction='DumpPage'/>
+          <button id='rtSurvey' label='Survey Notebooks' size='large'
+                  imageMso='FindDialog' onAction='SurveyNotebooks'/>
         </group>
       </tab>
     </tabs>
@@ -91,30 +95,184 @@ namespace RecallTape.OneNote
 
         /// <summary>
         /// Dump the current page, with the selection marked, to %TEMP%\RecallTape\.
-        /// Deliberately read-only: this build cannot modify a page, which makes it safe to point
-        /// at any notebook including somebody's real notes.
+        /// Deliberately read-only: this build has no code path that can modify a page, which makes
+        /// it safe to point at any notebook including somebody's real notes.
         /// </summary>
         public void DumpPage(IRibbonControl control)
         {
+            ON.Application app = null;
             try
             {
-                string pageId = onenote.Windows.CurrentWindow.CurrentPageId;
+                app = new ON.Application();
+
+                string pageId = app.Windows.CurrentWindow.CurrentPageId;
+                string stamp = DateTime.Now.ToString("yyyyMMdd-HHmmss");
                 Log("DumpPage pageId=" + pageId);
 
+                // piSelection marks the current selection inside the returned XML -- the foothold
+                // the whole product stands on. Schema pinned explicitly; never inherit a default
+                // that Microsoft can move.
                 string xml;
-                onenote.GetPageContent(pageId, out xml, PageInfo.Selection);
+                app.GetPageContent(pageId, out xml, ON.PageInfo.piSelection, ON.XMLSchema.xs2013);
+                Write("page-" + stamp + ".xml", xml);
+                Log("wrote page-" + stamp + ".xml (" + xml.Length + " chars)");
 
-                string stamp = DateTime.Now.ToString("yyyyMMdd-HHmmss");
-                string path = Path.Combine(LogDir, "page-" + stamp + ".xml");
-                File.WriteAllText(path, xml, Encoding.UTF8);
-                Log("wrote " + path + " (" + xml.Length + " chars)");
+                // Same page WITH binary data, so we can see how images/ink carry their payload.
+                string full;
+                app.GetPageContent(pageId, out full, ON.PageInfo.piBinaryDataSelection, ON.XMLSchema.xs2013);
+                Write("page-" + stamp + "-binary.xml", full);
+                Log("wrote page-" + stamp + "-binary.xml (" + full.Length + " chars)");
 
                 string hier;
-                onenote.GetHierarchy("", HierarchyScope.Pages, out hier);
-                File.WriteAllText(Path.Combine(LogDir, "hierarchy-" + stamp + ".xml"), hier, Encoding.UTF8);
-                Log("wrote hierarchy (" + hier.Length + " chars)");
+                app.GetHierarchy("", ON.HierarchyScope.hsPages, out hier, ON.XMLSchema.xs2013);
+                Write("hierarchy-" + stamp + ".xml", hier);
+                Log("wrote hierarchy-" + stamp + ".xml (" + hier.Length + " chars)");
             }
             catch (Exception ex) { Log("DumpPage FAILED: " + ex); }
+            finally
+            {
+                // Release promptly. A lingering proxy across the surrogate boundary is what keeps
+                // OneNote from shutting down cleanly.
+                if (app != null && Marshal.IsComObject(app)) Marshal.ReleaseComObject(app);
+            }
+        }
+
+        /// <summary>
+        /// Walk every page in every open notebook and report what content types actually occur.
+        ///
+        /// Reports counts, structural skeletons, and recognizedText samples, plus a full dump of the
+        /// first page containing InkWord so the real structure can be read end to end. Summary over
+        /// bulk: 300 pages of raw XML is noise, not evidence. Everything stays in %TEMP%.
+        /// </summary>
+        private const int MaxPages = 300;
+        private const int RecognizedTextSamples = 40;
+
+        public void SurveyNotebooks(IRibbonControl control)
+        {
+            ON.Application app = null;
+            var sb = new StringBuilder();
+            try
+            {
+                app = new ON.Application();
+                string hier;
+                app.GetHierarchy("", ON.HierarchyScope.hsPages, out hier, ON.XMLSchema.xs2013);
+
+                var doc = new System.Xml.XmlDocument();
+                doc.LoadXml(hier);
+                var ns = new System.Xml.XmlNamespaceManager(doc.NameTable);
+                ns.AddNamespace("one", doc.DocumentElement.NamespaceURI);
+
+                var pages = doc.SelectNodes("//one:Page", ns);
+                sb.AppendLine("RecallTape notebook survey  " + DateTime.Now.ToString("yyyy-MM-dd HH:mm"));
+                sb.AppendLine("pages found: " + pages.Count
+                    + (pages.Count > MaxPages ? "  (SURVEYING FIRST " + MaxPages + " ONLY)" : ""));
+                sb.AppendLine();
+
+                var totals = new System.Collections.Generic.SortedDictionary<string, int>();
+                var samples = new System.Collections.Generic.List<string>();
+                int scanned = 0, failed = 0, inkWordWithText = 0, imagesWithOcr = 0;
+                string inkWordSkeleton = null, imageSkeleton = null, inkPageDump = null;
+
+                foreach (System.Xml.XmlNode page in pages)
+                {
+                    if (scanned >= MaxPages) break;
+                    var idAttr = page.Attributes["ID"];
+                    if (idAttr == null) continue;
+                    try
+                    {
+                        string px;
+                        app.GetPageContent(idAttr.Value, out px, ON.PageInfo.piBasic, ON.XMLSchema.xs2013);
+                        var pd = new System.Xml.XmlDocument();
+                        pd.LoadXml(px);
+                        foreach (System.Xml.XmlNode n in pd.SelectNodes("//*"))
+                        {
+                            string name = n.LocalName;
+                            totals[name] = (totals.ContainsKey(name) ? totals[name] : 0) + 1;
+                            if (name == "InkWord")
+                            {
+                                if (inkPageDump == null)
+                                {
+                                    inkPageDump = idAttr.Value;
+                                    Write("ink-page-sample.xml", px);
+                                }
+                                var rt = n.Attributes["recognizedText"];
+                                if (rt != null && rt.Value.Length > 0)
+                                {
+                                    inkWordWithText++;
+                                    if (samples.Count < RecognizedTextSamples) samples.Add(rt.Value);
+                                }
+                                if (inkWordSkeleton == null) inkWordSkeleton = Skeleton(n);
+                            }
+                            else if (name == "Image")
+                            {
+                                if (n.SelectSingleNode("*[local-name()='OCRData']") != null) imagesWithOcr++;
+                                if (imageSkeleton == null) imageSkeleton = Skeleton(n);
+                            }
+                        }
+                        scanned++;
+                    }
+                    catch { failed++; }
+                }
+
+                sb.AppendLine("pages scanned: " + scanned + "   failed: " + failed);
+                sb.AppendLine();
+                sb.AppendLine("--- element totals across all scanned pages ---");
+                foreach (var kv in totals) sb.AppendLine(string.Format("  {0,-22} {1}", kv.Key, kv.Value));
+                sb.AppendLine();
+                sb.AppendLine("--- the questions this was run to answer ---");
+                sb.AppendLine("  InkWord elements ........... " + Count(totals, "InkWord"));
+                sb.AppendLine("  ...with recognizedText ..... " + inkWordWithText);
+                sb.AppendLine("  InkDrawing elements ........ " + Count(totals, "InkDrawing"));
+                sb.AppendLine("  InkParagraph elements ...... " + Count(totals, "InkParagraph"));
+                sb.AppendLine("  Image elements ............. " + Count(totals, "Image"));
+                sb.AppendLine("  ...with OCRData ............ " + imagesWithOcr);
+                sb.AppendLine("  Table elements ............. " + Count(totals, "Table"));
+                sb.AppendLine();
+                sb.AppendLine("full XML of first InkWord page: " + (inkPageDump != null ? "ink-page-sample.xml" : "(no InkWord found)"));
+                sb.AppendLine();
+                sb.AppendLine("--- structural skeletons (attribute names only, content elided) ---");
+                sb.AppendLine("  InkWord: " + (inkWordSkeleton ?? "(none found)"));
+                sb.AppendLine("  Image:   " + (imageSkeleton ?? "(none found)"));
+                sb.AppendLine();
+                sb.AppendLine("--- recognizedText samples (capped at " + RecognizedTextSamples + ", deliberately) ---");
+                if (samples.Count == 0) sb.AppendLine("  (none)");
+                foreach (var t in samples) sb.AppendLine("  [" + t + "]");
+
+                string stamp = DateTime.Now.ToString("yyyyMMdd-HHmmss");
+                Write("survey-" + stamp + ".txt", sb.ToString());
+                Log("survey complete: " + scanned + " pages -> survey-" + stamp + ".txt");
+            }
+            catch (Exception ex) { Log("SurveyNotebooks FAILED: " + ex); }
+            finally
+            {
+                if (app != null && Marshal.IsComObject(app)) Marshal.ReleaseComObject(app);
+            }
+        }
+
+        private static int Count(System.Collections.Generic.SortedDictionary<string, int> d, string k)
+        {
+            return d.ContainsKey(k) ? d[k] : 0;
+        }
+
+        /// <summary>Element name plus attribute names; content-bearing values are elided.</summary>
+        private static string Skeleton(System.Xml.XmlNode n)
+        {
+            var sb = new StringBuilder("<" + n.LocalName);
+            foreach (System.Xml.XmlAttribute a in n.Attributes)
+            {
+                bool contentish = a.Name == "recognizedText" || a.Name == "alt";
+                sb.Append(" ").Append(a.Name).Append("=")
+                  .Append(contentish ? "{elided}" : (a.Value.Length > 28 ? "{...}" : a.Value));
+            }
+            sb.Append(">");
+            foreach (System.Xml.XmlNode c in n.ChildNodes) sb.Append(" <").Append(c.LocalName).Append(">");
+            return sb.ToString();
+        }
+
+        private static void Write(string name, string content)
+        {
+            Directory.CreateDirectory(LogDir);
+            File.WriteAllText(Path.Combine(LogDir, name), content, Encoding.UTF8);
         }
 
         // ---- Logging ------------------------------------------------------------------------

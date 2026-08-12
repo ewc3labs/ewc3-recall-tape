@@ -1,0 +1,58 @@
+﻿RecallTape notebook survey  2026-08-12 14:31
+pages found: 79
+
+pages scanned: 79   failed: 0
+
+--- element totals across all scanned pages ---
+  AnchorPoint            74
+  Automatic              79
+  Bullet                 458
+  CallbackID             12845
+  Cell                   8
+  Column                 4
+  Columns                1
+  Horizontal             75
+  Image                  1131
+  InkDrawing             11685
+  List                   468
+  Number                 10
+  OCRData                1061
+  OCRText                1061
+  OCRToken               92558
+  OE                     896
+  OEChildren             296
+  Outline                103
+  Page                   79
+  PageSettings           79
+  PageSize               79
+  Position               12918
+  QuickStyleDef          129
+  Row                    2
+  RuleLines              79
+  ShapeInfo              118
+  Size                   12919
+  T                      892
+  Table                  1
+  Tag                    59
+  TagDef                 7
+  Title                  79
+  Vertical               75
+  XPSFile                29
+
+--- the questions this was run to answer ---
+  InkWord elements ........... 0
+  ...with recognizedText ..... 0
+  InkDrawing elements ........ 11685
+  InkParagraph elements ...... 0
+  Image elements ............. 1131
+  ...with OCRData ............ 1061
+  Table elements ............. 1
+
+full XML of first InkWord page: (no InkWord found)
+
+--- structural skeletons (attribute names only, content elided) ---
+  InkWord: (none found)
+  Image:   <Image lastModifiedTime=2026-08-12T15:49:10.000Z objectID={...}> <Position> <Size> <CallbackID>
+
+--- recognizedText samples (capped at 40, deliberately) ---
+  (none)

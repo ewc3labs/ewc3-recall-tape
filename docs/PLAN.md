@@ -26,6 +26,13 @@ These constrain every decision below.
 
 ---
 
+> **Phase order under revision (2026-08-12).** A survey of 79 pages of real notes found **892** typed
+> text elements against **11,685** ink and **1,131** images. Phase 1 is typed-text taping and Phase 2 is
+> ink and regions -- backwards for the actual user, who said so independently: *"I'm often covering
+> pictures and printouts."* Evidence:
+> [`analysis/onenote-page-xml-shapes.md`](analysis/onenote-page-xml-shapes.md). Re-sequencing is slice
+> `RT-10` in [`project/RecallTape_Development_Roadmap.md`](project/RecallTape_Development_Roadmap.md).
+
 ## Phase 0 — decide and prove (we are here)
 
 The platform research is **done** — see `origins.md`. What remains is proving it with running code
