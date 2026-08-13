@@ -306,11 +306,29 @@ highlight-only spans alone (all three verified against the captured page).
 For anything new, `one:Meta` is the honest mechanism: the schema allows it on `OE`, unbounded, and
 OneNote must preserve it. That is where tape identity should live rather than in a colour.
 
-### The caret is not a selection
+### A caret is a zero-length `one:T` marked `selected="all"`
 
-Related, same bug report. Per the schema, `all` means *this object is selected* and `partial` means
-*this object contains a selection*. A zero-length caret therefore produces **no `all` anywhere on the
-page** — so a removal path requiring one can never fire from a click. Clicking inside taped text and
+Related, same bug report, and the schema reading that seemed obvious was wrong. `all` means *this
+object is selected* and `partial` means *it contains a selection*, so a zero-length caret ought to
+produce no `all` at all. **It does not work that way.** Measured, cursor inside a taped word:
+
+```xml
+<one:T selected="none"><![CDATA[<span ...>WHOOMP!</span>]]></one:T>
+<one:T selected="all"><![CDATA[]]></one:T>            <!-- the caret. empty. -->
+<one:T selected="none"><![CDATA[<span ...> DERE IT IS!</span>]]></one:T>
+```
+
+Two things fall out, and both had already cost a build each:
+
+1. **OneNote splits the run at the insertion point**, so a single tape comes back as **two** taped
+   runs, each marked `none`. Scoping removal to one run strips half a tape and leaves the rest.
+2. **There IS an `all` on the page** — an empty `one:T` holding no text. So "is anything selected?"
+   answers *yes*, takes the selection path, and matches nothing, because neither taped half is marked.
+   A caret-mode fallback conditioned on finding no `all` never runs.
+
+The test that works: an `all` on a **zero-length `T`** is a caret; an `all` on anything with content is
+a real selection. For the caret, scope to the containing `one:OE` — verified against the captured page,
+where that scope contains both halves of the split tape. Clicking inside taped text and
 pressing Remove got "select some tape first", which is not just wrong but unactionable: you cannot see
 what you are selecting when it is black on black.
 

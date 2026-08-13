@@ -576,25 +576,52 @@ namespace RecallTape.OneNote
                 doc.LoadXml(xml);
                 DateTime expected = LastModified(doc);
 
-                // What counts as "the user picked this"? An object selection marks something "all".
-                // A caret marks nothing, so we fall back to the deepest "partial" - the innermost
-                // element containing the insertion point.
+                // What counts as "the user picked this"?
+                //
+                // A caret is NOT "nothing selected", which is what we assumed twice and were wrong
+                // about twice. Measured from a live page with the cursor inside a taped word, OneNote
+                // SPLITS the run at the insertion point and marks a ZERO-LENGTH one:T selected="all":
+                //
+                //   <one:T selected="none"><![CDATA[<span ...>WHOOMP!</span>]]></one:T>
+                //   <one:T selected="all"><![CDATA[]]></one:T>          <-- the caret, empty
+                //   <one:T selected="none"><![CDATA[<span ...> DERE IT IS!</span>]]></one:T>
+                //
+                // So there IS an "all" on the page, it just holds no text and neither half of the tape
+                // is marked at all. Testing "is anything selected" found that empty run, took the
+                // selection path, and matched nothing - the caret branch never even ran.
+                //
+                // Note the split: one tape came back as TWO taped runs. That is why the caret scope is
+                // the whole one:OE. Scoping to either run would strip half a tape.
                 Func<XmlNode, bool> inScope;
                 if (!selectionOnly)
                 {
                     inScope = delegate { return true; };
                 }
-                else if (doc.SelectSingleNode("//*[@selected='all']") != null)
-                {
-                    inScope = IsSelected;
-                }
                 else
                 {
-                    XmlNode caret = CaretScope(doc);
-                    Log("RemoveTape: no selection; caret scope = "
-                        + (caret == null ? "NONE - OneNote marked nothing" : caret.LocalName));
-                    if (caret == null) inScope = delegate { return false; };
-                    else inScope = n => IsWithin(n, caret);
+                    XmlNode realSelection = null;
+                    XmlNode caretMark = null;
+                    foreach (XmlNode n in doc.SelectNodes("//*[@selected='all']"))
+                    {
+                        if (n.LocalName == "T" && string.IsNullOrEmpty(n.InnerText))
+                        {
+                            if (caretMark == null) caretMark = n;
+                        }
+                        else if (realSelection == null) realSelection = n;
+                    }
+
+                    if (realSelection != null)
+                    {
+                        inScope = IsSelected;
+                    }
+                    else
+                    {
+                        XmlNode scope = caretMark != null ? NearestOE(caretMark) : CaretScope(doc);
+                        Log("RemoveTape: caret, no selection; scope = "
+                            + (scope == null ? "NONE - OneNote marked nothing" : scope.LocalName));
+                        if (scope == null) inScope = delegate { return false; };
+                        else inScope = node => IsWithin(node, scope);
+                    }
                 }
 
                 // 1. Text runs: unwrap our span, restoring the original CDATA byte for byte.
@@ -678,10 +705,15 @@ namespace RecallTape.OneNote
             }
             if (deepest == null) return null;
 
-            for (XmlNode p = deepest; p != null; p = p.ParentNode)
-                if (p.LocalName == "OE") return p;
+            return NearestOE(deepest) ?? deepest;
+        }
 
-            return deepest;
+        /// <summary>The paragraph containing this node - the smallest unit that holds a whole tape.</summary>
+        private static XmlNode NearestOE(XmlNode n)
+        {
+            for (XmlNode p = n; p != null; p = p.ParentNode)
+                if (p.LocalName == "OE") return p;
+            return null;
         }
 
         /// <summary>Is this node the scope, or inside it?</summary>
