@@ -14,14 +14,15 @@
 
 ---
 
-AsOf: 2026-08-13
+AsOf: 2026-08-13 (end of session)
 
 ## Current Focus
 
-1. `RT-24` — next; the first thing the real user asked for after it worked
-2. `RT-26` — before any reporter ships; page XML carries names, paths and whole lectures
-3. `RT-12` — then; a study loop cannot sit on writes that fail without retrying
+1. `RT-07` — next, and small; it decides whether `RT-20` can anchor by objectID at all
+2. `RT-20` — then; anchor tapes to an object so they move when it does
+3. `RT-12` — a study loop cannot sit on writes that fail without retrying
 4. `RT-15` + `RT-16` — the actual product: a hotkey and a loop, not a ribbon button
+5. `RT-26` — before any issue reporter ships; page XML carries names, paths, whole lectures
 
 ## Last Numbers
 
@@ -30,7 +31,7 @@ not a summary of them.
 
 | Series | Last Num | Series Description |
 | --- | --- | --- |
-| RT | RT-26 | RecallTape feature slices and fixes |
+| RT | RT-29 | RecallTape feature slices and fixes |
 
 `Last Num` is a cache over the Delivery Index, not a second source of truth — the IDs in the tables are
 authoritative. When minting, take the next number **and** confirm it is unused across every sub-table,
@@ -50,6 +51,9 @@ then bump this cell in the same edit.
 | RT-11 | 💨 proven | Click-to-peek on overlay tape | M | — | proven 2026-08-12 — ~45ms |
 | RT-13 | 💨 proven | Release pipeline to a draft GitHub Release | S | — | shipped 2026-08-13 — v0.0.1 public |
 | RT-14 | 💨 proven | Install from the release zip, start to finish | S | — | proven 2026-08-13 — Paul, not our machine |
+| RT-24 | 💨 proven | Free tape box, dragged onto anything | M | — | proven 2026-08-13 — no selection needed |
+| RT-27 | 💨 proven | Remove one tape; Remove All asks first | S | — | proven 2026-08-13 |
+| RT-28 | 💨 proven | Peeked tape keeps a visible outline | S | — | proven 2026-08-13 — drawn at real size |
 | RT-23 | 💨 proven | Verify the add-in loads on ARM64 | S | — | proven 2026-08-13 — Snapdragon X Elite |
 
 ### The product — none of this exists yet
@@ -69,7 +73,6 @@ then bump this cell in the same edit.
 | RT-04 | 🟦 coded | Overlay a whole selected image or ink group | M | — | works; sub-region is RT-06 |
 | RT-05 | ⬜ planned | Cluster InkDrawing boxes to tape handwriting | L | — | zero InkWord in 11,708 strokes — we segment |
 | RT-06 | ⬜ planned | Occlude part of an image using OCRToken boxes | L | — | unblocked — printout slides carry OCRData |
-| RT-24 | ⬜ planned | Tape a region that cannot be selected | M | — | backgrounds are always selected=none |
 
 ### Reporting and privacy
 
@@ -83,8 +86,9 @@ then bump this cell in the same edit.
 | ID | State | Slice | Est | Doc | Status |
 | --- | --- | --- | --- | --- | --- |
 | RT-12 | ⬜ planned | Re-read and retry on stale-timestamp writes | S | — | 0x80042010 seen live |
-| RT-20 | ⬜ planned | Reconcile overlays whose anchor content moved | M | — | drag the content, the tape stays put |
-| RT-07 | 🟧 blocked | Does objectID survive a sync round-trip | S | — | blocked on Paul — needs 2 machines |
+| RT-20 | ⬜ planned | Anchor tapes to an object, move them when it moves | M | — | blocked in practice by RT-07 |
+| RT-07 | ⬜ planned | Does objectID survive a sync round-trip | S | — | now testable — 2 machines share a notebook |
+
 | RT-08 | ⬜ planned | Progress feedback for long operations | S | — | Survey looks frozen on a big notebook |
 
 ### Shipping
@@ -100,6 +104,7 @@ then bump this cell in the same edit.
 | ID | State | Slice | Est | Doc | Status |
 | --- | --- | --- | --- | --- | --- |
 | RT-09 | ⏸️ deferred | The Assistant, as a click-through overlay window | XL | — | deferred — after the tool is good; name unresolved |
+| RT-29 | 🟥 cancelled | Free the corner handles from aspect ratio | S | — | not ours — no aspect property exists in the schema |
 
 **States:** ⬜ `planned` · 🟦 `coded` · 💨 `proven` (actually run and observed) · 🟩 `shipped` ·
 🟧 `blocked` · ⏸️ `deferred` · 🟥 `cancelled`

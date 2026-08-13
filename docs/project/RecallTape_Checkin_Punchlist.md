@@ -50,6 +50,17 @@ search the roadmap **including Parked / Retired** — the same thing gets notice
 
 **Items:**
 
+- [x] Free tape box when nothing is selectable, dragged onto the target — Wilson's design, [RT-24],
+      proven same day. Works because our tape IS a one:Image, so OneNote already gives it move and
+      resize handles; we place an object and get out of the way.
+- [x] Remove one tape vs Remove All, with a confirm on the destructive one — [RT-27].
+- [x] A peeked tape was invisible and unfindable; it now keeps a grey outline — [RT-28].
+- [x] Can corner handles resize asymmetrically? — **no, and not our call.** `Size` exposes only
+      width, height and isSetByUser; there is no aspect property anywhere in the schema. Corner
+      behaviour belongs to OneNote's manipulation UI. [RT-29] cancelled. Arbitrary rectangles are
+      already reachable by scribbling the shape in ink and taping the ink.
+- [ ] Anchor mode: explicit Anchor/FreeForm toggle, or implied by whether the page has an anchor?
+      Leaning implied — a mode is a thing the user has to keep track of. Undecided.
 - [x] *"Okay it works!"* — install from the release zip succeeded on a machine that did not build it,
       on ARM64. Closes [RT-14] and [RT-23], both of which were reasoned but untested until now.
 - [x] *"Now can it be done over top of a background image? Like something not selectable"* —
