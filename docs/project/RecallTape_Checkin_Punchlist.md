@@ -115,6 +115,17 @@ search the roadmap **including Parked / Retired** — the same thing gets notice
 - [ ] Diagnostic scripts changed machine state that outlived the diagnostic — this stray key and the
       machine-wide fusion logging were both found days later by accident. Worth a habit: scratch scripts
       that touch the registry should print what they changed and how to undo it.
+- [x] Paul could not install it at all — **fixed 2026-08-13**, and every cause was ours. The release
+      was still a DRAFT so he could not see it (*"There are no releases on that project"*), found the
+      tag, and downloaded GitHub's "Source code (zip)", which contains no built program. Our error then
+      told him to "extract the whole zip and run it from there" — which he had done, from the wrong
+      zip. Now detected explicitly and named.
+- [x] A `.ps1` has no "Run as administrator" on its context menu, and scripts out of a downloaded zip
+      are blocked by execution policy — two obstacles between a med student and a study tool. Added
+      `Install RecallTape.cmd` / `Uninstall RecallTape.cmd`, which self-elevate, unblock, and run with
+      a per-process policy override. Double-click, accept UAC, done.
+- [ ] Nobody has installed RecallTape from a release zip successfully yet. [RT-14] stays open until
+      someone has, on a machine that is not the one it was built on.
 - [ ] Do `OCRToken` coordinates share the page coordinate space or are they image-relative? Must be
       settled before any overlay is placed from them.
 - [ ] `Ctrl+Alt+T` collides with `AltGr` on Italian/UK keyboard layouts — check before it reaches a README.

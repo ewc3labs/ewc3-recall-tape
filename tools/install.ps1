@@ -26,12 +26,40 @@ $exe   = Join-Path $here 'RecallTape.ProtocolHandler.exe'
 function Fail($message) { Write-Host "ERROR: $message" -ForegroundColor Red; exit 1 }
 
 # --- preflight: fail with an explanation, never half-install -------------------------------
+# ORDER MATTERS: check WHAT they have before checking WHO they are. Someone who downloaded the
+# wrong zip should be told that first - making them elevate, only to then learn they have the source
+# archive, wastes a round trip on the more fundamental problem.
+# The most likely mistake, by a wide margin: GitHub attaches "Source code (zip)" to every release,
+# and it is the download that looks most official. It contains no built program. Saying "extract the
+# whole zip" to someone who already did that, from the wrong zip, is worse than useless - so detect
+# the source tree specifically and say what actually went wrong.
+$looksLikeSourceTree = (Test-Path (Join-Path $here '..\RecallTape.sln')) -or
+                       (Test-Path (Join-Path $here '..\src'))
+
+if (-not (Test-Path $dll) -or -not (Test-Path $exe)) {
+    if ($looksLikeSourceTree) {
+        Write-Host ""
+        Write-Host "This is the SOURCE CODE, not the installer." -ForegroundColor Yellow
+        Write-Host ""
+        Write-Host "  You have downloaded 'Source code (zip)', which GitHub adds to every release"
+        Write-Host "  automatically. It contains the code but no built program, so there is nothing"
+        Write-Host "  here to install."
+        Write-Host ""
+        Write-Host "  Go back to the release page and download the file named:"
+        Write-Host "      RecallTape-<version>-install.zip" -ForegroundColor Cyan
+        Write-Host ""
+        Write-Host "      https://github.com/ewc3labs/ewc3-recall-tape/releases/latest"
+        Write-Host ""
+        exit 1
+    }
+    Fail "RecallTape.OneNote.dll is not next to this script. Extract the whole zip, then run the installer from the extracted folder."
+}
+
 $principal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
 if (-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
-    Fail "Administrator required. Right-click install.ps1 and choose 'Run with PowerShell as Administrator'."
+    Fail "Administrator required. Close this and double-click 'Install RecallTape.cmd' instead - it elevates itself."
 }
-if (-not (Test-Path $dll)) { Fail "RecallTape.OneNote.dll is not next to this script. Extract the whole zip and run it from there." }
-if (-not (Test-Path $exe)) { Fail "RecallTape.ProtocolHandler.exe is not next to this script. Extract the whole zip and run it from there." }
+
 
 $regasm = Join-Path $env:WinDir 'Microsoft.NET\Framework64\v4.0.30319\RegAsm.exe'
 if (-not (Test-Path $regasm)) { Fail ".NET Framework 4.x not found. RecallTape needs .NET Framework 4.8." }

@@ -60,6 +60,10 @@ jobs:
 
           Copy-Item "tools/install.ps1"   $stage
           Copy-Item "tools/uninstall.ps1" $stage
+          # The double-clickable wrappers are the supported path: a .ps1 has no "Run as
+          # administrator" on its context menu, and scripts out of a downloaded zip are blocked.
+          Copy-Item "tools/Install RecallTape.cmd"   $stage
+          Copy-Item "tools/Uninstall RecallTape.cmd" $stage
           Copy-Item "LICENSE"             $stage
           Copy-Item "CHANGELOG.md"        $stage
 
@@ -68,7 +72,8 @@ jobs:
             'RecallTape.OneNote.dll',
             'Microsoft.Office.Interop.OneNote.dll',
             'RecallTape.ProtocolHandler.exe',
-            'install.ps1'
+            'install.ps1',
+            'Install RecallTape.cmd'
           )
           foreach ($f in $required) {
             if (-not (Test-Path (Join-Path $stage $f))) { throw "Package is missing $f" }
@@ -117,7 +122,8 @@ jobs:
 
             1. **Extract it somewhere permanent** (`C:\Tools\RecallTape` is fine). RecallTape runs from
                where you extract it, so don't unzip into Downloads and then tidy up.
-            2. Right-click **`install.ps1`** → **Run with PowerShell**, and accept the admin prompt.
+            2. Double-click **`Install RecallTape.cmd`** and say yes to the admin prompt. It handles
+               elevation and unblocking for you — you do not need to know anything about PowerShell.
             3. Restart OneNote. Look for the **RecallTape** tab.
 
             Administrator is needed once, to register the add-in with Windows.
@@ -134,9 +140,9 @@ jobs:
 
             ## Uninstall
 
-            Run `uninstall.ps1` as Administrator — it removes every registry key and leaves nothing
-            behind. Your notes are untouched, but tape already on a page stays there as ordinary
-            content, so use **Remove All Tape** first on anything you want cleared.
+            Double-click **`Uninstall RecallTape.cmd`** — it removes every registry key and leaves
+            nothing behind. Your notes are untouched, but tape already on a page stays there as
+            ordinary content, so use **Remove All Tape** first on anything you want cleared.
 
             ## Requirements
 

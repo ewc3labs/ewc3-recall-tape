@@ -78,7 +78,7 @@ which is already on every Windows 10/11 machine.
    - *not* "Source code (zip)" — GitHub adds those automatically and they are not the program
 3. **Extract it somewhere permanent** — `C:\Tools\RecallTape` is fine. RecallTape runs from where you
    extract it, so don't unzip into Downloads and then tidy up
-4. Right-click **`install.ps1`** → **Run with PowerShell**, and say yes to the admin prompt
+4. Double-click **`Install RecallTape.cmd`** and say yes to the admin prompt
 5. Restart OneNote
 
 You'll find a **RecallTape** tab in the ribbon.
@@ -89,7 +89,7 @@ Administrator is needed once, to register the add-in with Windows. Everything af
 > — click *More info* → *Run anyway*. That's a real warning about a real gap, not a formality; a signing
 > certificate is on the list before this is something we ask strangers to trust.
 
-**To uninstall:** run `uninstall.ps1` as Administrator. It removes every registry key and leaves nothing
+**To uninstall:** double-click `Uninstall RecallTape.cmd`. It removes every registry key and leaves nothing
 behind. Your notes are untouched — but tape already on a page stays there as ordinary content, so use
 **Remove All Tape** on any page you want cleared *before* uninstalling.
 
