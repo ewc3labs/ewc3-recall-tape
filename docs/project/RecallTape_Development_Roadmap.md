@@ -23,6 +23,19 @@ AsOf: 2026-08-12
 3. `RT-15` + `RT-16` — the actual product: a hotkey and a loop, not a ribbon button
 4. `RT-23` — blocked on Paul; only his Surface can prove the ARM64 work
 
+## Last Numbers
+
+Read this **before** minting an ID. It sits above the tables because it is an input to writing one,
+not a summary of them.
+
+| Series | Last Num | Series Description |
+| --- | --- | --- |
+| RT | RT-23 | RecallTape feature slices and fixes |
+
+`Last Num` is a cache over the Delivery Index, not a second source of truth — the IDs in the tables are
+authoritative. When minting, take the next number **and** confirm it is unused across every sub-table,
+then bump this cell in the same edit.
+
 ## Delivery Index
 
 **Rows are one line.** `Doc` pins a filename; anything wanting a paragraph wants a slice doc.
@@ -89,12 +102,6 @@ labels that meant nothing. Sizes are for spotting what is big, not for schedulin
 
 `Status`: `pending` · `started YYYY-MM-DD` · `proven YYYY-MM-DD` · `shipped YYYY-MM-DD` ·
 `deferred — {condition}` · `blocked on {who/what}` · `seen again YYYY-MM-DD`
-
-## Last Numbers
-
-| Series | Last Num | Series Description |
-| --- | --- | --- |
-| RT | RT-23 | RecallTape feature slices and fixes |
 
 ## Working Rules
 
