@@ -117,6 +117,10 @@ jobs:
           # looks at it. Cheap insurance while the install story is still a script.
           draft: true
           prerelease: true
+          # Both, not either. GitHub PRE-PENDS `body` to the notes it generates, so the hand-written
+          # install instructions stay at the top where a first-time visitor needs them, and the
+          # "What's Changed" commit list lands underneath for anyone who cares what moved.
+          generate_release_notes: true
           files: |
             RecallTape-install.zip
             RecallTape-install.zip.sha256
