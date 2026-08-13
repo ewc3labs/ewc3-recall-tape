@@ -16,7 +16,7 @@
     <RootNamespace>RecallTape.OneNote</RootNamespace>
     <ComVisible>false</ComVisible>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
-    <Version>0.0.1</Version>
+    <Version>0.0.2</Version>
     <Company>EWC3 Labs</Company>
     <Product>RecallTape</Product>
   </PropertyGroup>

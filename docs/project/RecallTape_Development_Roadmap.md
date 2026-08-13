@@ -31,7 +31,7 @@ not a summary of them.
 
 | Series | Last Num | Series Description |
 | --- | --- | --- |
-| RT | RT-29 | RecallTape feature slices and fixes |
+| RT | RT-31 | RecallTape feature slices and fixes |
 
 `Last Num` is a cache over the Delivery Index, not a second source of truth — the IDs in the tables are
 authoritative. When minting, take the next number **and** confirm it is unused across every sub-table,
@@ -54,6 +54,8 @@ then bump this cell in the same edit.
 | RT-24 | 💨 proven | Free tape box, dragged onto anything | M | — | proven 2026-08-13 — no selection needed |
 | RT-27 | 💨 proven | Remove one tape; Remove All asks first | S | — | proven 2026-08-13 |
 | RT-28 | 💨 proven | Peeked tape keeps a visible outline | S | — | proven 2026-08-13 — drawn at real size |
+| RT-30 | 💨 proven | An installer a non-developer can actually run | M | — | proven 2026-08-13 — double-click .cmd |
+| RT-31 | 💨 proven | Guard every registry deletion | S | — | proven 2026-08-13 — refuses non-RecallTape keys |
 | RT-23 | 💨 proven | Verify the add-in loads on ARM64 | S | — | proven 2026-08-13 — Snapdragon X Elite |
 
 ### The product — none of this exists yet

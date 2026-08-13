@@ -152,12 +152,19 @@ jobs:
             > **Windows will warn you.** This isn't code-signed yet, so SmartScreen flags it as
             > unrecognised — *More info* → *Run anyway*. That's a real gap, not a formality.
 
+            **What changed:** see [CHANGELOG.md](https://github.com/ewc3labs/ewc3-recall-tape/blob/main/CHANGELOG.md)
+            for the readable version — the auto-generated commit list below is accurate but terse.
+
             ## Use it
 
             - Select text, ink, or an image → **Tape**
-            - **Ctrl+click** a tape strip to peek under it; click again to cover it back up
+            - Press **Tape** with *nothing* selected to drop a free box you can drag and resize onto
+              anything — including page backgrounds and lecture printouts, which OneNote will not let
+              you select
+            - **Ctrl+click** a tape strip to peek under it; click again to cover it back up. A peeked
+              tape keeps a grey outline so you can find it again
             - Selecting over taped text also reveals it
-            - **Remove All Tape** clears the current page
+            - **Remove Tape** clears the one you have selected; **Remove All** clears the page, and asks first
 
             ## Uninstall
 
