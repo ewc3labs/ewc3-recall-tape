@@ -36,6 +36,8 @@ do everything twice.
 
 Select an answer, a term, a label on a diagram. Press a hotkey. It's covered.
 
+*(Already installed? The [how-to](HOW-TO.md) has the buttons that exist today — the hotkeys below are still on the way.)*
+
 Then study one-handed:
 
 ```
@@ -86,6 +88,11 @@ which is already on every Windows 10/11 machine.
 grab `RecallTape-install.zip`, not "Source code (zip)".)*
 
 You'll find a **RecallTape** tab in the ribbon.
+
+### 📖 [How to use it →](HOW-TO.md)
+
+Three buttons and one gesture. Covers taping text, ink and unselectable page backgrounds,
+peeking, removing, and what to do when something misbehaves.
 
 Administrator is needed once, to register the add-in with Windows. Everything after that is per-user.
 

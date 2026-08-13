@@ -268,6 +268,56 @@ material**, and a public issue is publication.
 **Consequence:** "attach the page XML" is never a one-click feature. It needs a scrubber that strips
 paths, identity and content, and it needs the user to see what will be sent before it is sent.
 
+## 9b. OneNote rewrites the CSS you give it
+
+Measured from a live page, tape applied and then saved:
+
+```
+  written:   color:#1F1F1E;background:#1F1F1E;mso-highlight:#1F1F1E
+  read back: background:black;mso-highlight:black
+```
+
+Three things happened, none of them announced:
+
+1. **`color:` was dropped entirely.**
+2. **`#1F1F1E` was snapped to the named colour `black`.**
+3. A newline was inserted inside the tag: `<span
+style='...'>`. Harmless to `[^>]*`, fatal to any
+   pattern assuming `<span ` with a space.
+
+**This broke tape removal, intermittently, in the way that is hardest to read.** Tape identity was the
+string `#1F1F1E`. Tape we had just applied still carried it and came off; the same tape after a save
+did not and did not. The user selected a solid black bar and was told "no tape here", which reads as a
+random failure rather than a round-trip one.
+
+**And the colour was never a marker in the first place.** The same page shows `color:#1F1F1E` on the
+`one:OE` style of ordinary, untaped paragraphs — it is OneNote's own default body text colour in this
+theme. It was chosen as "deliberately not #1F1F1F, so the colour doubles as the removal marker". It
+was neither deliberate nor a marker; it was the default, and it did not survive.
+
+**The rule:** identity must not be a value OneNote is free to normalise. Identify by the *shape* of
+what survives, or by a schema element it must round-trip.
+
+Tape is now recognised by structure — a `span` whose style sets **both** `background` **and**
+`mso-highlight` to a dark colour, in any notation. Both, not either: a user's own highlight sets one.
+This still recognises tape from earlier builds, and it leaves yellow highlights, plain black text, and
+highlight-only spans alone (all three verified against the captured page).
+
+For anything new, `one:Meta` is the honest mechanism: the schema allows it on `OE`, unbounded, and
+OneNote must preserve it. That is where tape identity should live rather than in a colour.
+
+### The caret is not a selection
+
+Related, same bug report. Per the schema, `all` means *this object is selected* and `partial` means
+*this object contains a selection*. A zero-length caret therefore produces **no `all` anywhere on the
+page** — so a removal path requiring one can never fire from a click. Clicking inside taped text and
+pressing Remove got "select some tape first", which is not just wrong but unactionable: you cannot see
+what you are selecting when it is black on black.
+
+Removal now falls back to the deepest `partial` element, climbed to its `one:OE`. The climb is
+necessary because OneNote splits a `one:T` at the insertion point, so one taped run with a caret in it
+comes back as two taped runs; scoping to the marked one would strip half a tape.
+
 ## 10. Sync conflicts exist and are invisible to us
 
 Opening a shared notebook for the first time showed OneNote's manual "sync conflict" markers,

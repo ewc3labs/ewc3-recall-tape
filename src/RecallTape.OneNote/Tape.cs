@@ -61,7 +61,24 @@ namespace RecallTape.OneNote
         /// and effectively never typed by a human, so the same value that draws the tape also identifies
         /// it on removal.
         /// </summary>
-        private const string TapeInk = "#1F1F1E";
+        // OneNote REWRITES inline CSS on round-trip. Measured, from a live page:
+        //
+        //   we write:   color:#1F1F1E;background:#1F1F1E;mso-highlight:#1F1F1E
+        //   we get back: background:black;mso-highlight:black
+        //
+        // It drops color: outright and snaps #1F1F1E to the named colour "black". So identifying our
+        // tape by that exact string worked on tape we had just applied and FAILED on tape that had
+        // been saved - the user selected a black bar and was told there was no tape there.
+        //
+        // Worse, #1F1F1E was never distinctive: it is OneNote's own default body text colour, and it
+        // appears on ordinary untaped paragraphs in the same page. It was never a marker.
+        //
+        // So identity now comes from two places, in order of trust:
+        //   1. a one:Meta on the paragraph, which the schema guarantees and OneNote must round-trip
+        //   2. the SHAPE of the style - background and mso-highlight both set to the same dark colour
+        // Rule 2 is what recognises tape applied by earlier builds, and it stays.
+        private const string TapeInk = "black";
+        private const string TapeMetaName = "RecallTape";
 
         /// <summary>
         /// All THREE properties matter. A version using only background+mso-highlight looks right solely
@@ -69,6 +86,42 @@ namespace RecallTape.OneNote
         /// </summary>
         private const string TapeSpanStyle =
             "color:" + TapeInk + ";background:" + TapeInk + ";mso-highlight:" + TapeInk;
+
+        /// <summary>A span is ours if background and mso-highlight are both a dark colour.</summary>
+        private static readonly Regex TapeSpanRx = new Regex(
+            @"<span([^>]*)>(.*?)</span>",
+            RegexOptions.Singleline | RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+        private static readonly Regex DarkFillRx = new Regex(
+            @"(?:background|mso-highlight)\s*:\s*(?:black|#0{3,6}|#1F1F1E|rgb\(\s*(?:[0-9]|[1-2][0-9]|3[01])\s*,)",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+        private static bool IsTapeStyle(string spanAttrs)
+        {
+            if (string.IsNullOrEmpty(spanAttrs)) return false;
+            // Both, not either: a user highlighting text is one property. Tape is always both.
+            return DarkFillRx.IsMatch(spanAttrs)
+                && spanAttrs.IndexOf("mso-highlight", StringComparison.OrdinalIgnoreCase) >= 0
+                && spanAttrs.IndexOf("background", StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
+        /// <summary>Does this run carry our tape?</summary>
+        private static bool HasTape(string cdata)
+        {
+            if (string.IsNullOrEmpty(cdata)) return false;
+            foreach (Match m in TapeSpanRx.Matches(cdata))
+                if (IsTapeStyle(m.Groups[1].Value)) return true;
+            return false;
+        }
+
+        /// <summary>Unwrap our spans, leaving anyone else's alone.</summary>
+        private static string StripTape(string cdata)
+        {
+            return TapeSpanRx.Replace(cdata, delegate(Match m)
+            {
+                return IsTapeStyle(m.Groups[1].Value) ? m.Groups[2].Value : m.Value;
+            });
+        }
 
         // ---- Tape ---------------------------------------------------------------------------
 
@@ -137,7 +190,7 @@ namespace RecallTape.OneNote
             {
                 string content = t.InnerText;
                 if (string.IsNullOrEmpty(content)) continue;
-                if (content.IndexOf(TapeInk, StringComparison.OrdinalIgnoreCase) >= 0) continue;
+                if (HasTape(content)) continue;
 
                 SetCData(doc, t, "<span style='" + TapeSpanStyle + "'>" + content + "</span>");
                 n++;
@@ -429,9 +482,18 @@ namespace RecallTape.OneNote
         // ---- Remove tape --------------------------------------------------------------------
 
         /// <summary>
-        /// Remove only the tape the user has selected: click a tape strip, or put the cursor in a
-        /// taped run, then press this. Our overlay IS a one:Image, so OneNote hands it back marked
-        /// selected="all" like any other object - no special case needed.
+        /// Remove only the tape the user picked.
+        ///
+        /// Two different gestures have to work, and they produce DIFFERENT XML:
+        ///
+        ///   Clicking a tape strip selects an object. Our overlay IS a one:Image, so OneNote hands
+        ///   it back selected="all" and there is nothing to work out.
+        ///
+        ///   Putting the CARET in taped text selects nothing. Per the schema, "all" means the object
+        ///   is selected and "partial" means it merely CONTAINS a selection - so a zero-length caret
+        ///   can never produce an "all" anywhere on the page. Requiring one (which we did) meant
+        ///   clicking inside black text and pressing Remove got "select some tape first", which is
+        ///   both wrong and impossible to act on: you cannot see what you are selecting.
         /// </summary>
         public void RemoveTape(IRibbonControl control)
         {
@@ -492,7 +554,7 @@ namespace RecallTape.OneNote
             foreach (XmlNode t in doc.SelectNodes("//*[local-name()='T']"))
             {
                 string c = t.InnerText;
-                if (!string.IsNullOrEmpty(c) && c.IndexOf(TapeInk, StringComparison.OrdinalIgnoreCase) >= 0) n++;
+                if (HasTape(c)) n++;
             }
             return n;
         }
@@ -514,20 +576,37 @@ namespace RecallTape.OneNote
                 doc.LoadXml(xml);
                 DateTime expected = LastModified(doc);
 
+                // What counts as "the user picked this"? An object selection marks something "all".
+                // A caret marks nothing, so we fall back to the deepest "partial" - the innermost
+                // element containing the insertion point.
+                Func<XmlNode, bool> inScope;
+                if (!selectionOnly)
+                {
+                    inScope = delegate { return true; };
+                }
+                else if (doc.SelectSingleNode("//*[@selected='all']") != null)
+                {
+                    inScope = IsSelected;
+                }
+                else
+                {
+                    XmlNode caret = CaretScope(doc);
+                    Log("RemoveTape: no selection; caret scope = "
+                        + (caret == null ? "NONE - OneNote marked nothing" : caret.LocalName));
+                    if (caret == null) inScope = delegate { return false; };
+                    else inScope = n => IsWithin(n, caret);
+                }
+
                 // 1. Text runs: unwrap our span, restoring the original CDATA byte for byte.
                 int runs = 0;
                 foreach (XmlNode t in doc.SelectNodes("//*[local-name()='T']"))
                 {
                     string content = t.InnerText;
                     if (string.IsNullOrEmpty(content)) continue;
-                    if (content.IndexOf(TapeInk, StringComparison.OrdinalIgnoreCase) < 0) continue;
-                    if (selectionOnly && !IsSelected(t)) continue;
+                    if (!HasTape(content)) continue;
+                    if (!inScope(t)) continue;
 
-                    SetCData(doc, t, Regex.Replace(
-                        content,
-                        "<span[^>]*" + Regex.Escape(TapeInk) + "[^>]*>(.*?)</span>",
-                        "$1",
-                        RegexOptions.Singleline | RegexOptions.IgnoreCase));
+                    SetCData(doc, t, StripTape(content));
                     runs++;
                 }
                 if (runs > 0) UpdatePage(app, doc);
@@ -540,7 +619,7 @@ namespace RecallTape.OneNote
                     var oid = n.Attributes["objectID"];
                     if (alt == null || oid == null) continue;
                     if (!alt.Value.StartsWith(TapePrefix, StringComparison.OrdinalIgnoreCase)) continue;
-                    if (selectionOnly && !IsSelected(n)) continue;
+                    if (!inScope(n)) continue;
 
                     app.DeletePageContent(pageId, oid.Value, expected, false);
                     boxes++;
@@ -550,7 +629,9 @@ namespace RecallTape.OneNote
                 if (selectionOnly && runs == 0 && boxes == 0)
                 {
                     Log(what + ": nothing selected that is taped");
-                    Tell(app, "Select a tape strip, or click inside taped text, then press Remove Tape.\n\n"
+                    Tell(app, "No tape here.\n\n"
+                            + "Put the cursor in taped text, or click a tape strip, then press "
+                            + "Remove Tape.\n\n"
                             + "To clear the whole page, use Remove All.", "RecallTape");
                     return;
                 }
@@ -562,7 +643,7 @@ namespace RecallTape.OneNote
                     {
                         string c = t.InnerText;
                         if (string.IsNullOrEmpty(c)) continue;
-                        if (c.IndexOf(TapeInk, StringComparison.OrdinalIgnoreCase) >= 0) continue;
+                        if (HasTape(c)) continue;
                         if (Regex.IsMatch(c, @"mso-highlight|background\s*:", RegexOptions.IgnoreCase)) foreign++;
                     }
                 }
@@ -572,6 +653,43 @@ namespace RecallTape.OneNote
             }
             catch (Exception ex) { Log("RemoveTape FAILED: " + ex.Message); }
             finally { Release(app); }
+        }
+
+        /// <summary>
+        /// Where is the caret? The deepest element marked "partial", climbed to its paragraph.
+        ///
+        /// The climb matters. OneNote splits a one:T at the insertion point, so a single taped run
+        /// with a caret in the middle of it comes back as TWO taped runs. Scoping to the one that
+        /// happens to be marked would strip half a tape and leave the other half. The one:OE is the
+        /// smallest unit guaranteed to hold a whole tape.
+        ///
+        /// Cost of that choice: several separately taped words in ONE paragraph come off together.
+        /// Accepted for now - a half-removed tape is a visible defect, removing a neighbour is not.
+        /// </summary>
+        private static XmlNode CaretScope(XmlDocument doc)
+        {
+            XmlNode deepest = null;
+            int best = -1;
+            foreach (XmlNode n in doc.SelectNodes("//*[@selected='partial']"))
+            {
+                int d = 0;
+                for (XmlNode p = n; p != null; p = p.ParentNode) d++;
+                if (d > best) { best = d; deepest = n; }
+            }
+            if (deepest == null) return null;
+
+            for (XmlNode p = deepest; p != null; p = p.ParentNode)
+                if (p.LocalName == "OE") return p;
+
+            return deepest;
+        }
+
+        /// <summary>Is this node the scope, or inside it?</summary>
+        private static bool IsWithin(XmlNode n, XmlNode scope)
+        {
+            for (XmlNode p = n; p != null; p = p.ParentNode)
+                if (ReferenceEquals(p, scope)) return true;
+            return false;
         }
 
         /// <summary>selected="all" on the node, or on anything inside it.</summary>
