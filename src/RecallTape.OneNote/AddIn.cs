@@ -89,8 +89,14 @@ namespace RecallTape.OneNote
         <group id='rtTape' label='Tape'>
           <button id='rtTapeSel' label='Tape' size='large'
                   imageMso='HighlightColorPicker' onAction='TapeSelection'/>
-          <button id='rtUntape' label='Remove All Tape' size='large'
-                  imageMso='ClearFormatting' onAction='RemoveTape'/>
+          <button id='rtUntape' label='Remove Tape' size='large'
+                  imageMso='ClearFormatting' onAction='RemoveTape'
+                  screentip='Remove the selected tape'
+                  supertip='Click a tape strip, or click inside taped text, then press this.'/>
+          <button id='rtUntapeAll' label='Remove All' size='large'
+                  imageMso='DeleteAllComments' onAction='RemoveAllTape'
+                  screentip='Remove every tape on this page'
+                  supertip='Asks first. Clears the whole page, which can undo a lot of work.'/>
         </group>
         <group id='rtSpike' label='Spike'>
           <button id='rtDump' label='Dump Page XML' size='large'

@@ -59,6 +59,10 @@
       <EmbedInteropTypes>False</EmbedInteropTypes>
       <Private>True</Private>
     </Reference>
+    <!-- System.Drawing generates the peeked-state outline at the box's actual pixel size. A border
+         baked into the 8x8 PNG would scale with the image: on a 240x80 box a 1px border becomes 30px
+         wide and 10px tall. Ships with .NET Framework; nothing extra to redistribute. -->
+    <Reference Include="System.Drawing" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
   </ItemGroup>

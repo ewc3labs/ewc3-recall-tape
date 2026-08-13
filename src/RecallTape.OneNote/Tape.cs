@@ -3,6 +3,9 @@ using System;
 using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
+using System.Drawing;
+using System.Drawing.Imaging;
+using System.IO;
 using System.Xml;
 
 namespace RecallTape.OneNote
@@ -43,6 +46,13 @@ namespace RecallTape.OneNote
         private const string ClearPng =
             "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAADUlEQVR42mNgGAUgAAABCAABXbcZDQAAAABJRU5ErkJggg==";
 
+        /// <summary>Outline colour for a peeked tape. Grey reads against both light pages and dark images.</summary>
+        private static readonly Color PeekBorder = Color.FromArgb(180, 128, 128, 128);
+        private const int PeekBorderPx = 2;
+
+        /// <summary>Sanity cap. A page-sized tape should not produce a multi-megapixel PNG.</summary>
+        private const int MaxPeekPx = 2000;
+
         /// <summary>A little margin so the tape covers descenders and antialiasing, like real tape.</summary>
         private const double TapePadding = 2.0;
 
@@ -80,10 +90,20 @@ namespace RecallTape.OneNote
                 int runs = TapeTextRuns(doc);
                 int boxes = TapePositioned(doc, ns);
 
+                string freeId = null;
                 if (runs == 0 && boxes == 0)
                 {
-                    Log("TapeSelection: nothing tapeable selected");
-                    return;
+                    // Nothing selectable was selected. That is the NORMAL case for a page background
+                    // image, a printout slide, or anything else OneNote refuses to hand us
+                    // (backgroundImage="true" is never marked selected, no matter where the user
+                    // clicks). Rather than fail, drop a free-floating tape box on the page and let
+                    // them drag and resize it onto whatever they wanted covered.
+                    //
+                    // This works because our tape IS a one:Image, so OneNote already gives it move
+                    // and resize handles for free. We are not building a canvas editor; we are
+                    // placing an object and getting out of the way.
+                    freeId = AddFreeTape(doc, ns);
+                    boxes = 1;
                 }
 
                 UpdatePage(app, doc);
@@ -93,6 +113,11 @@ namespace RecallTape.OneNote
                 // attributes it does not like on write, and a silently-dropped hyperlink is
                 // indistinguishable from "clicking does not work" when you are staring at the page.
                 if (boxes > 0) VerifyTape(app, pageId);
+
+                // A printout page can be 24,000 points tall and the API exposes no viewport or scroll
+                // position, so a box we place is quite possibly nowhere near what the user is looking
+                // at. NavigateTo is the only way to reunite them with it.
+                if (freeId != null) NavigateToTape(app, pageId, freeId);
             }
             catch (Exception ex) { Log("TapeSelection FAILED: " + ex.Message); }
             finally { Release(app); }
@@ -185,6 +210,139 @@ namespace RecallTape.OneNote
             catch (Exception ex) { Log("  verify failed: " + ex.Message); }
         }
 
+        /// <summary>
+        /// Place a free-floating tape box for the user to drag onto whatever they want covered.
+        ///
+        /// Placement is a compromise, not a guess: the OneNote API exposes no viewport or scroll
+        /// position (Window gives IDs, FullPageView, Active, DockedLocation - nothing about where the
+        /// user is looking), so there is no such thing as "in the middle of the screen". We cascade
+        /// from the last tape on the page so repeated presses stack neatly, fall back to the top-left
+        /// of the page's content, and then navigate the user to it.
+        /// </summary>
+        private static string AddFreeTape(XmlDocument doc, string ns)
+        {
+            const double W = 240, H = 80, CASCADE = 24;
+
+            double x = double.MaxValue, y = double.MaxValue;
+            double lastX = double.MinValue, lastY = double.MinValue;
+
+            foreach (XmlNode n in doc.SelectNodes("//*[local-name()='Image' or local-name()='InkDrawing' or local-name()='Outline']"))
+            {
+                double bx, by, bw, bh;
+                if (!TryGetBox(n, out bx, out by, out bw, out bh)) continue;
+
+                var alt = n.Attributes == null ? null : n.Attributes["alt"];
+                bool ours = alt != null && alt.Value.StartsWith(TapePrefix, StringComparison.OrdinalIgnoreCase);
+
+                if (ours) { if (by > lastY) { lastX = bx; lastY = by; } }
+                else { if (bx < x) x = bx; if (by < y) y = by; }
+            }
+
+            double px, py;
+            if (lastY > double.MinValue) { px = lastX + CASCADE; py = lastY + CASCADE; }   // stack on the last one
+            else if (x < double.MaxValue) { px = x + 40; py = y + 40; }                    // just inside the content
+            else { px = 100; py = 100; }                                                   // empty page
+
+            string id = Guid.NewGuid().ToString();
+            int z = HighestZ(doc) + 1;
+
+            var img = doc.CreateElement("one", "Image", ns);
+            img.SetAttribute("alt", TapePrefix + StateTaped + ":" + id);
+            img.SetAttribute("hyperlink", "recalltape://toggle/" + id);
+
+            var pos = doc.CreateElement("one", "Position", ns);
+            pos.SetAttribute("x", Num(px));
+            pos.SetAttribute("y", Num(py));
+            pos.SetAttribute("z", z.ToString(CultureInfo.InvariantCulture));
+            img.AppendChild(pos);
+
+            var size = doc.CreateElement("one", "Size", ns);
+            size.SetAttribute("width", Num(W));
+            size.SetAttribute("height", Num(H));
+            // isSetByUser tells OneNote the size is deliberate, so it shows resize handles rather
+            // than treating the dimensions as an intrinsic property of the bitmap.
+            size.SetAttribute("isSetByUser", "true");
+            img.AppendChild(size);
+
+            var data = doc.CreateElement("one", "Data", ns);
+            data.InnerText = OpaquePng;
+            img.AppendChild(data);
+
+            doc.DocumentElement.AppendChild(img);
+            Log(string.Format("  free tape box x={0:F1} y={1:F1} {2}x{3} z={4} id={5}", px, py, W, H, z, id));
+            return id;
+        }
+
+        /// <summary>Scroll the user to a tape we just created, by looking up the objectID OneNote assigned it.</summary>
+        private static void NavigateToTape(ON.Application app, string pageId, string id)
+        {
+            try
+            {
+                string xml;
+                app.GetPageContent(pageId, out xml, ON.PageInfo.piBasic, ON.XMLSchema.xs2013);
+                var doc = new XmlDocument();
+                doc.LoadXml(xml);
+
+                foreach (XmlNode n in doc.SelectNodes("//*[local-name()='Image']"))
+                {
+                    var alt = n.Attributes["alt"];
+                    var oid = n.Attributes["objectID"];
+                    if (alt == null || oid == null) continue;
+                    if (!alt.Value.EndsWith(":" + id, StringComparison.OrdinalIgnoreCase)) continue;
+
+                    app.NavigateTo(pageId, oid.Value, false);
+                    Log("  navigated to the new tape box");
+                    return;
+                }
+            }
+            catch (Exception ex) { Log("  navigate failed: " + ex.Message); }
+        }
+
+        /// <summary>
+        /// A transparent PNG with a visible outline, generated at the box's own size.
+        ///
+        /// WHY GENERATED RATHER THAN A CONSTANT: the covered state is a solid colour, so an 8x8 PNG
+        /// scales to any size perfectly. A BORDER does not - stretch an 8x8 bordered image across a
+        /// 240x80 box and the 1px edge becomes 30px wide and 10px tall. The outline has to be drawn at
+        /// the real pixel dimensions, which means regenerating it whenever the box is peeked.
+        ///
+        /// WHY IT MATTERS: a fully transparent peeked tape is invisible AND unfindable. With twenty
+        /// tapes on a page, revealing one and scrolling away loses it - you are reduced to hovering
+        /// over the page hunting for the hyperlink cursor. The outline says "tape lives here, revealed".
+        /// </summary>
+        private static string BorderPng(double widthPt, double heightPt)
+        {
+            try
+            {
+                int w = Math.Max(PeekBorderPx * 2 + 1, Math.Min(MaxPeekPx, (int)Math.Round(widthPt)));
+                int h = Math.Max(PeekBorderPx * 2 + 1, Math.Min(MaxPeekPx, (int)Math.Round(heightPt)));
+
+                using (var bmp = new Bitmap(w, h, PixelFormat.Format32bppArgb))
+                {
+                    using (var g = Graphics.FromImage(bmp))
+                    using (var pen = new Pen(PeekBorder, PeekBorderPx))
+                    {
+                        g.Clear(Color.Transparent);
+                        // Inset by half the pen width so the stroke lands inside the bitmap rather
+                        // than being clipped in half by the edges.
+                        float o = PeekBorderPx / 2f;
+                        g.DrawRectangle(pen, o, o, w - PeekBorderPx, h - PeekBorderPx);
+                    }
+                    using (var ms = new MemoryStream())
+                    {
+                        bmp.Save(ms, ImageFormat.Png);
+                        return Convert.ToBase64String(ms.ToArray());
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Never fail a peek over cosmetics - fall back to the fully transparent constant.
+                Log("  border generation failed, using plain transparent: " + ex.Message);
+                return ClearPng;
+            }
+        }
+
         // ---- Peek ---------------------------------------------------------------------------
 
         /// <summary>
@@ -245,7 +403,20 @@ namespace RecallTape.OneNote
                 if (callback != null) target.RemoveChild(callback);
 
                 var fresh = doc.CreateElement("one", "Data", ns2);
-                fresh.InnerText = covered ? ClearPng : OpaquePng;
+                if (covered)
+                {
+                    // Read the size at toggle time, not at tape time: the user may well have dragged
+                    // the box to a different shape since, and the outline has to match what is there
+                    // now rather than what was there then.
+                    double bw = 240, bh = 80;
+                    var sz = target.SelectSingleNode("*[local-name()='Size']");
+                    if (sz != null) { Dbl(sz, "width", out bw); Dbl(sz, "height", out bh); }
+                    fresh.InnerText = BorderPng(bw, bh);
+                }
+                else
+                {
+                    fresh.InnerText = OpaquePng;
+                }
                 target.AppendChild(fresh);
 
                 UpdatePage(app, doc);
@@ -257,7 +428,22 @@ namespace RecallTape.OneNote
 
         // ---- Remove tape --------------------------------------------------------------------
 
+        /// <summary>
+        /// Remove only the tape the user has selected: click a tape strip, or put the cursor in a
+        /// taped run, then press this. Our overlay IS a one:Image, so OneNote hands it back marked
+        /// selected="all" like any other object - no special case needed.
+        /// </summary>
         public void RemoveTape(IRibbonControl control)
+        {
+            RemoveTapeScoped(selectionOnly: true);
+        }
+
+        /// <summary>
+        /// Remove every tape on the page. This is the dangerous one: it can undo a study session's
+        /// worth of work in a click, and there is no undo that reaches back through a sync. So it
+        /// counts first, says exactly how many, and defaults the dialog to No.
+        /// </summary>
+        public void RemoveAllTape(IRibbonControl control)
         {
             ON.Application app = null;
             try
@@ -267,31 +453,86 @@ namespace RecallTape.OneNote
 
                 string xml;
                 app.GetPageContent(pageId, out xml, ON.PageInfo.piBasic, ON.XMLSchema.xs2013);
+                var doc = new XmlDocument();
+                doc.LoadXml(xml);
+
+                int n = CountTape(doc);
+                if (n == 0)
+                {
+                    Log("RemoveAllTape: nothing to remove");
+                    Tell(app, "There is no RecallTape on this page.", "RecallTape");
+                    return;
+                }
+
+                string question = n == 1
+                    ? "Remove the 1 tape strip on this page?"
+                    : "Remove all " + n + " tape strips on this page?";
+
+                if (!Confirm(app, question + "\n\nWhat is underneath is not affected.", "Remove all tape"))
+                {
+                    Log("RemoveAllTape: cancelled by user (" + n + " would have been removed)");
+                    return;
+                }
+
+                RemoveTapeScoped(selectionOnly: false);
+            }
+            catch (Exception ex) { Log("RemoveAllTape FAILED: " + ex.Message); }
+            finally { Release(app); }
+        }
+
+        /// <summary>Count tape on the page: overlay images plus taped text runs.</summary>
+        private static int CountTape(XmlDocument doc)
+        {
+            int n = 0;
+            foreach (XmlNode img in doc.SelectNodes("//*[local-name()='Image']"))
+            {
+                var alt = img.Attributes["alt"];
+                if (alt != null && alt.Value.StartsWith(TapePrefix, StringComparison.OrdinalIgnoreCase)) n++;
+            }
+            foreach (XmlNode t in doc.SelectNodes("//*[local-name()='T']"))
+            {
+                string c = t.InnerText;
+                if (!string.IsNullOrEmpty(c) && c.IndexOf(TapeInk, StringComparison.OrdinalIgnoreCase) >= 0) n++;
+            }
+            return n;
+        }
+
+        private void RemoveTapeScoped(bool selectionOnly)
+        {
+            ON.Application app = null;
+            try
+            {
+                app = new ON.Application();
+                string pageId = app.Windows.CurrentWindow.CurrentPageId;
+
+                // piSelection when we care which one they picked; piBasic is enough otherwise.
+                string xml;
+                app.GetPageContent(pageId, out xml,
+                    selectionOnly ? ON.PageInfo.piSelection : ON.PageInfo.piBasic, ON.XMLSchema.xs2013);
 
                 var doc = new XmlDocument();
                 doc.LoadXml(xml);
                 DateTime expected = LastModified(doc);
 
-                // 1. Unwrap taped text runs, then write the page back once.
+                // 1. Text runs: unwrap our span, restoring the original CDATA byte for byte.
                 int runs = 0;
                 foreach (XmlNode t in doc.SelectNodes("//*[local-name()='T']"))
                 {
                     string content = t.InnerText;
                     if (string.IsNullOrEmpty(content)) continue;
                     if (content.IndexOf(TapeInk, StringComparison.OrdinalIgnoreCase) < 0) continue;
+                    if (selectionOnly && !IsSelected(t)) continue;
 
-                    string restored = Regex.Replace(
+                    SetCData(doc, t, Regex.Replace(
                         content,
                         "<span[^>]*" + Regex.Escape(TapeInk) + "[^>]*>(.*?)</span>",
                         "$1",
-                        RegexOptions.Singleline | RegexOptions.IgnoreCase);
-
-                    SetCData(doc, t, restored);
+                        RegexOptions.Singleline | RegexOptions.IgnoreCase));
                     runs++;
                 }
                 if (runs > 0) UpdatePage(app, doc);
 
-                // 2. Delete overlays by objectID -- both covered and peeked ones.
+                // 2. Overlays: delete by objectID, so we remove the element we own and nothing else.
                 int boxes = 0;
                 foreach (XmlNode n in doc.SelectNodes("//*[local-name()='Image']"))
                 {
@@ -299,30 +540,79 @@ namespace RecallTape.OneNote
                     var oid = n.Attributes["objectID"];
                     if (alt == null || oid == null) continue;
                     if (!alt.Value.StartsWith(TapePrefix, StringComparison.OrdinalIgnoreCase)) continue;
+                    if (selectionOnly && !IsSelected(n)) continue;
 
                     app.DeletePageContent(pageId, oid.Value, expected, false);
                     boxes++;
                 }
 
-                // Never let "I did nothing" look like "there was nothing to do". Hand-made
-                // black-on-black is somebody's own formatting and we must not strip it -- but staying
-                // silent about it reads as a bug.
-                int foreign = 0;
-                foreach (XmlNode t in doc.SelectNodes("//*[local-name()='T']"))
+                string what = selectionOnly ? "RemoveTape" : "RemoveAllTape";
+                if (selectionOnly && runs == 0 && boxes == 0)
                 {
-                    string c = t.InnerText;
-                    if (string.IsNullOrEmpty(c)) continue;
-                    if (c.IndexOf(TapeInk, StringComparison.OrdinalIgnoreCase) >= 0) continue;
-                    if (Regex.IsMatch(c, @"mso-highlight|background\s*:", RegexOptions.IgnoreCase)) foreign++;
+                    Log(what + ": nothing selected that is taped");
+                    Tell(app, "Select a tape strip, or click inside taped text, then press Remove Tape.\n\n"
+                            + "To clear the whole page, use Remove All.", "RecallTape");
+                    return;
                 }
 
-                Log("RemoveTape: restored " + runs + " text run(s), removed " + boxes + " overlay box(es)"
-                    + (foreign > 0
-                        ? "; left " + foreign + " run(s) alone - highlighted, but not RecallTape's"
-                        : ""));
+                int foreign = 0;
+                if (!selectionOnly)
+                {
+                    foreach (XmlNode t in doc.SelectNodes("//*[local-name()='T']"))
+                    {
+                        string c = t.InnerText;
+                        if (string.IsNullOrEmpty(c)) continue;
+                        if (c.IndexOf(TapeInk, StringComparison.OrdinalIgnoreCase) >= 0) continue;
+                        if (Regex.IsMatch(c, @"mso-highlight|background\s*:", RegexOptions.IgnoreCase)) foreign++;
+                    }
+                }
+
+                Log(what + ": restored " + runs + " text run(s), removed " + boxes + " overlay box(es)"
+                    + (foreign > 0 ? "; left " + foreign + " run(s) alone - highlighted, but not RecallTape's" : ""));
             }
             catch (Exception ex) { Log("RemoveTape FAILED: " + ex.Message); }
             finally { Release(app); }
+        }
+
+        /// <summary>selected="all" on the node, or on anything inside it.</summary>
+        private static bool IsSelected(XmlNode n)
+        {
+            var a = n.Attributes == null ? null : n.Attributes["selected"];
+            if (a != null && a.Value == "all") return true;
+            return n.SelectSingleNode(".//*[@selected='all']") != null;
+        }
+
+        // ---- Talking to the user ------------------------------------------------------------
+        //
+        // P/Invoke rather than WinForms: this is two dialogs, and pulling System.Windows.Forms into
+        // the surrogate would mean owning its DPI and message-loop behaviour for no benefit.
+
+        [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = false)]
+        private static extern int MessageBoxW(IntPtr hWnd, string text, string caption, uint type);
+
+        private const uint MB_YESNO = 0x00000004;
+        private const uint MB_ICONWARNING = 0x00000030;
+        private const uint MB_ICONINFORMATION = 0x00000040;
+        private const uint MB_DEFBUTTON2 = 0x00000100;   // default to No on a destructive question
+        private const int IDYES = 6;
+
+        private static IntPtr OneNoteWindow(ON.Application app)
+        {
+            // Parent to OneNote so the dialog cannot appear behind it - a modal hidden behind the
+            // window it belongs to looks exactly like a hang.
+            try { return new IntPtr((long)app.Windows.CurrentWindow.WindowHandle); }
+            catch { return IntPtr.Zero; }
+        }
+
+        private static bool Confirm(ON.Application app, string text, string caption)
+        {
+            return MessageBoxW(OneNoteWindow(app), text, caption,
+                               MB_YESNO | MB_ICONWARNING | MB_DEFBUTTON2) == IDYES;
+        }
+
+        private static void Tell(ON.Application app, string text, string caption)
+        {
+            MessageBoxW(OneNoteWindow(app), text, caption, MB_ICONINFORMATION);
         }
 
         // ---- Helpers ------------------------------------------------------------------------
