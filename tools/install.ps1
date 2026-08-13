@@ -69,11 +69,48 @@ if (-not (Test-Path 'C:\Program Files\Microsoft Office\root\Office16\ONENOTE.EXE
     Write-Host "         RecallTape needs OneNote for Windows desktop, not the Store app. Continuing anyway." -ForegroundColor Yellow
 }
 
+# --- is this an upgrade, and is OneNote in the way? --------------------------------------
+# Both matter to a non-developer and neither is obvious. Same CLSID means an upgrade
+# OVERWRITES cleanly rather than stacking, but the old folder is left behind doing nothing, and
+# a running OneNote keeps the OLD dll loaded in its surrogate until it is restarted - so the
+# install can report success while the user still has yesterday's build in front of them.
+$previous = $null
+try {
+    $cb = (Get-ItemProperty "HKLM:\SOFTWARE\Classes\CLSID\$Clsid\InprocServer32" -ErrorAction SilentlyContinue).CodeBase
+    if ($cb) {
+        $old = Split-Path -Parent ([Uri]$cb).LocalPath
+        if ($old -and $old -ne $here) { $previous = $old }
+    }
+} catch { }
+
+$oneNoteRunning = [bool](Get-Process ONENOTE -ErrorAction SilentlyContinue)
+
 Write-Host "Installing RecallTape from $here"
+if ($previous) {
+    Write-Host ""
+    Write-Host "  Replacing a previous install at:" -ForegroundColor Cyan
+    Write-Host "    $previous"
+    Write-Host "  That folder is no longer used and can be deleted once this finishes."
+}
 Write-Host ""
 
 # --- 1. the COM class ----------------------------------------------------------------------
-& $regasm $dll /codebase | Out-Null
+# 2>&1 because RegAsm writes its unsigned-assembly advisory to stderr, and "can cause your
+# assembly to interfere with other applications" is alarming, unactionable noise for someone who
+# just wants to study. We already state plainly that this build is unsigned. Real failures are
+# still caught - the exit code is checked rather than the chatter.
+# EAP is 'Stop' for this script, and under that setting redirecting a NATIVE program's stderr with
+# 2>&1 makes PowerShell raise a terminating NativeCommandError - so the mere presence of RegAsm's
+# advisory would abort the install. Drop to Continue for the call itself, then restore.
+$prevEap = $ErrorActionPreference
+$ErrorActionPreference = 'Continue'
+$regasmOut = & $regasm $dll /codebase 2>&1
+$ErrorActionPreference = $prevEap
+
+if ($LASTEXITCODE -ne 0) {
+    Write-Host ($regasmOut -join [Environment]::NewLine) -ForegroundColor Red
+    Fail "Could not register the add-in with Windows (RegAsm exit code $LASTEXITCODE)."
+}
 Write-Host "  [1/4] COM class registered"
 
 # --- 2. the surrogate ----------------------------------------------------------------------
@@ -134,7 +171,17 @@ New-Item -Path 'HKCU:\SOFTWARE\Policies\Microsoft\Office\16.0\Common\Security\Tr
 Write-Host "  [4/4] Click-to-peek enabled"
 
 Write-Host ""
-Write-Host "Done. Restart OneNote and look for the RecallTape tab." -ForegroundColor Green
+if ($oneNoteRunning) {
+    Write-Host "  ================================================================" -ForegroundColor Yellow
+    Write-Host "   OneNote is running. CLOSE IT COMPLETELY AND REOPEN IT."          -ForegroundColor Yellow
+    Write-Host "   Until you do, OneNote keeps using the previous version."         -ForegroundColor Yellow
+    Write-Host "  ================================================================" -ForegroundColor Yellow
+    Write-Host ""
+    Write-Host "   OneNote lingers after its window closes. If the tab still looks"
+    Write-Host "   wrong, end any ONENOTE.EXE in Task Manager, then reopen."
+} else {
+    Write-Host "Done. Start OneNote and look for the RecallTape tab." -ForegroundColor Green
+}
 Write-Host ""
 Write-Host "Keep this folder where it is -- RecallTape runs from here."
-Write-Host "To remove it, run uninstall.ps1 as Administrator."
+Write-Host "To remove it, double-click 'Uninstall RecallTape.cmd'."
