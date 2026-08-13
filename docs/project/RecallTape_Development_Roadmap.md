@@ -18,39 +18,83 @@ AsOf: 2026-08-12
 
 ## Current Focus
 
-1. `RT-12` — next; writes fail on a stale timestamp with no retry, and the study loop will hit it hard
-2. `RT-04` — region overlay over images and printouts, Paul's primary case
-3. `RT-07` — blocked on Paul; needs two machines and one shared notebook, both of which now exist
+1. `RT-14` — next; blocks publishing v0.0.1 to Paul
+2. `RT-12` — then; a study loop cannot sit on writes that fail without retrying
+3. `RT-15` + `RT-16` — the actual product: a hotkey and a loop, not a ribbon button
+4. `RT-23` — blocked on Paul; only his Surface can prove the ARM64 work
 
 ## Delivery Index
 
-| ID | State | Slice | Est | Doc | Status |
-| --- | --- | --- | --: | --- | --- |
-| RT-01 | 💨 proven | Reach the OneNote API at all | 1d | — | proven 2026-08-12 |
-| RT-02 | 💨 proven | Add-in loads, reads page XML | 1d | — | proven 2026-08-12 |
-| RT-03 | 💨 proven | Cover a selection and uncover it | 2d | — | proven 2026-08-12 — Phase 0 exit criterion met |
-| RT-04 | ⬜ planned | Region overlay over images and printouts | 3d | — | Paul's primary use case |
-| RT-05 | ⬜ planned | Cluster InkDrawing boxes to tape handwriting | 3d | — | confirmed 2026-08-12 — zero InkWord in 11,708 strokes |
-| RT-06 | ⬜ planned | Image occlusion driven by OCRToken boxes | 3d | — | pending RT-04 |
-| RT-07 | 🟧 blocked | Does objectID survive a sync round-trip | 1d | — | blocked on Paul — needs 2 machines, 1 notebook |
-| RT-08 | ⬜ planned | Progress feedback for long operations | 1d | — | Survey looks frozen on a big notebook |
-| RT-09 | ⏸️ deferred | The Assistant, as a click-through overlay window | ? | — | deferred — after the tool works; name unresolved |
-| RT-10 | ⬜ planned | Re-sequence PLAN.md phases to match real notes | 0.5d | — | typed text is 892 of 13,708 elements |
-| RT-11 | 💨 proven | Click-to-peek on overlay tape via Image hyperlink | 2d | — | proven 2026-08-12 — ~45ms per toggle |
-| RT-12 | ⬜ planned | Re-read and retry on stale-timestamp writes | 1d | — | 0x80042010 seen live; study loop writes fast |
-| RT-13 | 🟦 coded | Release pipeline: build, package, draft GitHub Release | 1d | — | started 2026-08-12 — untested until a tag is pushed |
+**Rows are one line.** `Doc` pins a filename; anything wanting a paragraph wants a slice doc.
 
-**States:** ⬜ `planned` · 🟦 `coded` · 💨 `proven` (actually run, not just built) · 🟩 `shipped` ·
+### Proven
+
+| ID | State | Slice | Est | Doc | Status |
+| --- | --- | --- | --- | --- | --- |
+| RT-01 | 💨 proven | Reach the OneNote API at all | M | — | proven 2026-08-12 |
+| RT-02 | 💨 proven | Add-in loads and reads page XML | M | — | proven 2026-08-12 |
+| RT-03 | 💨 proven | Cover a selection and uncover it | M | — | proven 2026-08-12 |
+| RT-11 | 💨 proven | Click-to-peek on overlay tape | M | — | proven 2026-08-12 — ~45ms |
+| RT-13 | 💨 proven | Release pipeline to a draft GitHub Release | S | — | proven 2026-08-12 — draft, unpublished |
+
+### The product — none of this exists yet
+
+| ID | State | Slice | Est | Doc | Status |
+| --- | --- | --- | --- | --- | --- |
+| RT-15 | ⬜ planned | Hotkeys, so tape is not ribbon-only | M | — | `Ctrl+Alt+T`; needs a keyboard hook |
+| RT-16 | ⬜ planned | Study loop: reveal, retape, advance on one key | L | — | the whole point; needs RT-12 first |
+| RT-17 | ⬜ planned | Reveal All / Retape All | S | — | Retape All needs remembered tape state |
+| RT-18 | ⬜ planned | Confirm tape survives close and reopen | S | — | likely free — tape is page content |
+| RT-19 | ⬜ planned | Settings: hotkey bindings, reveal style | M | — | pending RT-15 |
+
+### Content types
+
+| ID | State | Slice | Est | Doc | Status |
+| --- | --- | --- | --- | --- | --- |
+| RT-04 | 🟦 coded | Overlay a whole selected image or ink group | M | — | works; sub-region is RT-06 |
+| RT-05 | ⬜ planned | Cluster InkDrawing boxes to tape handwriting | L | — | zero InkWord in 11,708 strokes — we segment |
+| RT-06 | ⬜ planned | Occlude part of an image using OCRToken boxes | L | — | 92,558 tokens available; Paul's core case |
+
+### Robustness
+
+| ID | State | Slice | Est | Doc | Status |
+| --- | --- | --- | --- | --- | --- |
+| RT-12 | ⬜ planned | Re-read and retry on stale-timestamp writes | S | — | 0x80042010 seen live |
+| RT-20 | ⬜ planned | Reconcile overlays whose anchor content moved | M | — | drag the content, the tape stays put |
+| RT-07 | 🟧 blocked | Does objectID survive a sync round-trip | S | — | blocked on Paul — needs 2 machines |
+| RT-08 | ⬜ planned | Progress feedback for long operations | S | — | Survey looks frozen on a big notebook |
+
+### Shipping
+
+| ID | State | Slice | Est | Doc | Status |
+| --- | --- | --- | --- | --- | --- |
+| RT-14 | 🟦 coded | Install from the release zip, start to finish | S | — | written, never run — blocks publishing |
+| RT-23 | 🟧 blocked | Verify the add-in loads on ARM64 | S | — | blocked on Paul's Surface |
+| RT-21 | ⬜ planned | Code signing, so SmartScreen stops warning | M | — | needs a certificate; costs money |
+| RT-22 | ⬜ planned | MSI installer to replace zip + script | L | — | after RT-21; WiX builds headless |
+| RT-10 | ⬜ planned | Re-sequence PLAN.md phases to match real notes | S | — | flagged in PLAN.md, not yet done |
+
+### Parked / Retired
+
+| ID | State | Slice | Est | Doc | Status |
+| --- | --- | --- | --- | --- | --- |
+| RT-09 | ⏸️ deferred | The Assistant, as a click-through overlay window | XL | — | deferred — after the tool is good; name unresolved |
+
+**States:** ⬜ `planned` · 🟦 `coded` · 💨 `proven` (actually run and observed) · 🟩 `shipped` ·
 🟧 `blocked` · ⏸️ `deferred` · 🟥 `cancelled`
 
-`Status`: `pending` · `started YYYY-MM-DD` · `shipped YYYY-MM-DD` · `deferred — {condition}` ·
-`blocked on {who/what}` · `seen again YYYY-MM-DD`
+**Est:** `S` an hour or two · `M` a session · `L` several sessions · `XL` a project in itself.
+Day counts were fake precision — five slices landed in a single day while wearing "1d" and "3d"
+labels that meant nothing. Sizes are for spotting what is big, not for scheduling.
+
+`Status`: `pending` · `started YYYY-MM-DD` · `proven YYYY-MM-DD` · `shipped YYYY-MM-DD` ·
+`deferred — {condition}` · `blocked on {who/what}` · `seen again YYYY-MM-DD`
 
 ## Last Numbers
 
 | Series | Last Num | Series Description |
 | --- | --- | --- |
-| RT | RT-13 | RecallTape feature slices and fixes |
+| RT | RT-23 | RecallTape feature slices and fixes |
 
 ## Working Rules
 
@@ -64,7 +108,7 @@ AsOf: 2026-08-12
 ## Related Documentation
 
 - **[What OneNote page XML actually contains](../analysis/onenote-page-xml-shapes.md)** | [GitHub Link 🔗](https://github.com/ewc3labs/ewc3-recall-tape/blob/main/docs/analysis/onenote-page-xml-shapes.md)
-  - *The measured receipts behind RT-03 through RT-06.*
+  - *The measured receipts behind most of the Content types section.*
 - **[How OneMore talks to OneNote](../analysis/onemore-onenote-interaction.md)** | [GitHub Link 🔗](https://github.com/ewc3labs/ewc3-recall-tape/blob/main/docs/analysis/onemore-onenote-interaction.md)
   - *The reference implementation, and what we take from it.*
 - **[PLAN.md](../PLAN.md)** | [GitHub Link 🔗](https://github.com/ewc3labs/ewc3-recall-tape/blob/main/docs/PLAN.md)
