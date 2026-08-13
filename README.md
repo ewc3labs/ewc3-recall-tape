@@ -64,9 +64,34 @@ and no second app to sync.
 
 ## Status
 
-**Pre-alpha. Nothing to install yet.** The design, the platform research, and the origin story are
-here; a first add-in build is being spiked against real OneNote now. Watch or star if you want to know
-when there's something to install.
+**Pre-alpha, but installable.** Taping and peeking work on real notes. It is not signed, there is no
+proper installer yet, and it has not been through anyone's exam week. Expect rough edges and tell us
+about them.
+
+## Install
+
+**Requires:** Windows, OneNote **desktop** (the Office one, not the Store app), and .NET Framework 4.8 —
+which is already on every Windows 10/11 machine.
+
+1. Go to [**Releases**](https://github.com/ewc3labs/ewc3-recall-tape/releases) and open the latest one
+2. Download **`RecallTape-<version>-install.zip`**
+   - *not* "Source code (zip)" — GitHub adds those automatically and they are not the program
+3. **Extract it somewhere permanent** — `C:\Tools\RecallTape` is fine. RecallTape runs from where you
+   extract it, so don't unzip into Downloads and then tidy up
+4. Right-click **`install.ps1`** → **Run with PowerShell**, and say yes to the admin prompt
+5. Restart OneNote
+
+You'll find a **RecallTape** tab in the ribbon.
+
+Administrator is needed once, to register the add-in with Windows. Everything after that is per-user.
+
+> **Windows will warn you.** The download isn't code-signed yet, so SmartScreen flags it as unrecognised
+> — click *More info* → *Run anyway*. That's a real warning about a real gap, not a formality; a signing
+> certificate is on the list before this is something we ask strangers to trust.
+
+**To uninstall:** run `uninstall.ps1` as Administrator. It removes every registry key and leaves nothing
+behind. Your notes are untouched — but tape already on a page stays there as ordinary content, so use
+**Remove All Tape** on any page you want cleared *before* uninstalling.
 
 ## How it's built
 

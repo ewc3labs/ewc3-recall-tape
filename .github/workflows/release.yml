@@ -30,10 +30,10 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '8.0.x'
           # 8.0 is the BUILD DRIVER only. Both projects target net48, which is what ships on every
@@ -83,17 +83,20 @@ jobs:
                  elseif ('${{ inputs.tag }}') { '${{ inputs.tag }}' }
                  else { "run-${{ github.run_number }}" }
           "TAG=$tag" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
-          Compress-Archive -Path "stage/RecallTape/*" -DestinationPath "RecallTape-$tag.zip"
+          # Named "-install" on purpose. GitHub attaches "Source code (zip)" and "(tar.gz)" to every
+          # release automatically, so a visitor sees four downloads. The filename has to say which
+          # one is the program.
+          Compress-Archive -Path "stage/RecallTape/*" -DestinationPath "RecallTape-$tag-install.zip"
 
       - name: Checksum
         shell: pwsh
         run: |
-          $h = Get-FileHash "RecallTape-$env:TAG.zip" -Algorithm SHA256
-          "$($h.Hash)  RecallTape-$env:TAG.zip" | Out-File "RecallTape-$env:TAG.zip.sha256" -Encoding ascii
-          Get-Content "RecallTape-$env:TAG.zip.sha256"
+          $h = Get-FileHash "RecallTape-$env:TAG-install.zip" -Algorithm SHA256
+          "$($h.Hash)  RecallTape-$env:TAG-install.zip" | Out-File "RecallTape-$env:TAG-install.zip.sha256" -Encoding ascii
+          Get-Content "RecallTape-$env:TAG-install.zip.sha256"
 
       - name: Publish release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ env.TAG }}
           name: RecallTape ${{ env.TAG }}
@@ -102,23 +105,41 @@ jobs:
           draft: true
           prerelease: true
           files: |
-            RecallTape-${{ env.TAG }}.zip
-            RecallTape-${{ env.TAG }}.zip.sha256
+            RecallTape-${{ env.TAG }}-install.zip
+            RecallTape-${{ env.TAG }}-install.zip.sha256
           body: |
-            **Pre-alpha.** Expect rough edges.
+            **Pre-alpha.** Taping and peeking work on real notes. Expect rough edges.
 
-            This is not a signed installer yet — Windows SmartScreen will warn about it.
+            ## Install
 
-            ### Install
-            1. Extract the zip somewhere permanent (it is installed *in place*, so do not extract to Downloads and then delete it)
-            2. Right-click `install.ps1` → **Run with PowerShell as Administrator**
-            3. Restart OneNote
+            **Download `RecallTape-${{ env.TAG }}-install.zip`** below — *not* "Source code (zip)",
+            which GitHub adds automatically and is not the program.
 
-            Administrator is required once, to register the COM add-in machine-wide.
+            1. **Extract it somewhere permanent** (`C:\Tools\RecallTape` is fine). RecallTape runs from
+               where you extract it, so don't unzip into Downloads and then tidy up.
+            2. Right-click **`install.ps1`** → **Run with PowerShell**, and accept the admin prompt.
+            3. Restart OneNote. Look for the **RecallTape** tab.
 
-            ### Uninstall
-            Run `uninstall.ps1` as Administrator. It removes every registry key and leaves nothing behind.
+            Administrator is needed once, to register the add-in with Windows.
 
-            ### Requirements
+            > **Windows will warn you.** This isn't code-signed yet, so SmartScreen flags it as
+            > unrecognised — *More info* → *Run anyway*. That's a real gap, not a formality.
+
+            ## Use it
+
+            - Select text, ink, or an image → **Tape**
+            - **Ctrl+click** a tape strip to peek under it; click again to cover it back up
+            - Selecting over taped text also reveals it
+            - **Remove All Tape** clears the current page
+
+            ## Uninstall
+
+            Run `uninstall.ps1` as Administrator — it removes every registry key and leaves nothing
+            behind. Your notes are untouched, but tape already on a page stays there as ordinary
+            content, so use **Remove All Tape** first on anything you want cleared.
+
+            ## Requirements
+
             - Windows, OneNote **desktop** (the Office one, not the Store app)
-            - .NET Framework 4.8 — already present on every Windows 10/11 machine
+            - .NET Framework 4.8 — already on every Windows 10/11 machine
+            - Runs native on ARM64 (Snapdragon Surfaces) as well as x64
