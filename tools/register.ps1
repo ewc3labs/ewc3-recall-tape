@@ -41,8 +41,15 @@ Set-ItemProperty $appidKey -Name 'DllSurrogate' -Value ''
 #
 # WHY THIS IS NOT OPTIONAL: on ARM64 Windows the machine-wide DCOM default launch security is more
 # restrictive than on x64 and does not grant local-launch to BUILTIN\Users. Without this, COM refuses
-# to start dllhost.exe for a non-admin session and the add-in NEVER LOADS -- silently. Snapdragon
-# Surfaces are the target hardware for this product, so that is the common case, not the edge case.
+# to start dllhost.exe and the add-in NEVER LOADS -- silently.
+#
+# This bites even a user who IS a local administrator. With UAC on, an admin's normal processes run
+# with a FILTERED token in which BUILTIN\Administrators is marked deny-only: usable to deny access,
+# never to grant it. OneNote runs non-elevated, so an ACE granting launch to BA does nothing for it,
+# and the check falls through to what the filtered token can actually grant with. That makes AU
+# (Authenticated Users) the load-bearing entry here rather than belt-and-braces.
+#
+# Snapdragon Surfaces are the target hardware, so this is the common case, not the edge case.
 # Harmless on x64: it just makes the implicit grant explicit. Credit: OneMore's OneMoreSetup/Registry.wxs.
 $sd = '010004801400000024000000000000003400000001020000000000052000000020020000010200000000000520000000200200000200480003000000000014000b00000001010000000000050b000000000014000b000000010100000000000512000000000018000b00000001020000000000052000000020020000'
 $bytes = [byte[]]::new($sd.Length / 2)

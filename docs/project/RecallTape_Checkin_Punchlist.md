@@ -100,7 +100,9 @@ search the roadmap **including Parked / Retired** — the same thing gets notice
 - [x] Paul is on a Snapdragon X Elite Surface (ARM64). Two things this forces, both now done:
       `PlatformTarget=AnyCPU` (an x64-only assembly cannot load into an ARM64 host at all), and the
       DCOM `LaunchPermission` SDDL (ARM64 does not grant local-launch to BUILTIN\Users, so COM refuses
-      to start dllhost and the add-in never loads). Neither is verified on real ARM64 hardware yet.
+      to start dllhost and the add-in never loads). This bites even a local administrator: with UAC
+      on, a normal process runs with a filtered token where `BUILTIN\Administrators` is deny-only, so
+      the `AU` ace is what actually grants it. Neither change is verified on real ARM64 hardware yet.
 - [ ] Verify on Paul's Surface: does the add-in load, and does click-to-peek work, on real ARM64?
 - [ ] `Ctrl+Alt+T` on non-US layouts — still unchecked, and now more urgent since the target user has
       a Surface, not the keyboard we test on.
