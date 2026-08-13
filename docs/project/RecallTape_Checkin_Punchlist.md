@@ -106,6 +106,15 @@ search the roadmap **including Parked / Retired** — the same thing gets notice
 - [ ] Verify on Paul's Surface: does the add-in load, and does click-to-peek work, on real ARM64?
 - [ ] `Ctrl+Alt+T` on non-US layouts — still unchecked, and now more urgent since the target user has
       a Surface, not the keyboard we test on.
+- [x] Could not disable RecallTape from OneNote's COM Add-ins dialog without running OneNote elevated
+      — **fixed 2026-08-13.** Cause was a stray `HKLM` add-in registration left behind by a debugging
+      script during the OnConnection hunt; our installer only ever writes `HKCU`. Office will not let a
+      non-elevated user untick an add-in registered machine-wide, because clearing the box writes
+      `LoadBehavior` into that hive. Stray key removed, and `uninstall.ps1`/`unregister.ps1` now sweep
+      `HKLM` defensively even though we never create it.
+- [ ] Diagnostic scripts changed machine state that outlived the diagnostic — this stray key and the
+      machine-wide fusion logging were both found days later by accident. Worth a habit: scratch scripts
+      that touch the registry should print what they changed and how to undo it.
 - [ ] Do `OCRToken` coordinates share the page coordinate space or are they image-relative? Must be
       settled before any overlay is placed from them.
 - [ ] `Ctrl+Alt+T` collides with `AltGr` on Italian/UK keyboard layouts — check before it reaches a README.

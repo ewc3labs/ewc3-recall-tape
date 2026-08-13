@@ -80,6 +80,10 @@ Set-ItemProperty "HKLM:\SOFTWARE\Classes\AppID\$Clsid" -Name 'LaunchPermission' 
 Write-Host "  [2/4] COM surrogate configured (with ARM64 launch permission)"
 
 # --- 3. OneNote add-in registration --------------------------------------------------------
+# HKCU ONLY, deliberately. OneMore also registers under HKLM as a fallback for Intune/SYSTEM
+# deployments, and we should not copy that: an add-in registered machine-wide cannot be disabled from
+# OneNote's COM Add-ins dialog by a non-elevated user, because unticking the box writes LoadBehavior
+# into that hive. A per-user install should be a user's to switch off without asking for admin.
 $addin = 'HKCU:\SOFTWARE\Microsoft\Office\OneNote\AddIns\RecallTape.AddIn'
 New-Item -Path $addin -Force | Out-Null
 Set-ItemProperty $addin -Name 'FriendlyName' -Value 'RecallTape'

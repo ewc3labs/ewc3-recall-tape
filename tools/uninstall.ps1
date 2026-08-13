@@ -36,8 +36,14 @@ if ((Test-Path $regasm) -and (Test-Path $dll)) {
     Write-Host "  COM class unregistered"
 }
 
+# HKLM add-in key is included even though install.ps1 never creates one. Anything that ever put
+# RecallTape in HKLM - a diagnostic, an older build, a future machine-wide install - would otherwise
+# survive uninstall AND be un-tickable from OneNote's COM Add-ins dialog without elevation, because
+# clearing that checkbox writes LoadBehavior to whichever hive the key lives in. Sweeping both is
+# cheap; leaving a machine-wide registration behind is not.
 foreach ($key in @(
     "HKLM:\SOFTWARE\Classes\AppID\$Clsid",
+    'HKLM:\SOFTWARE\Microsoft\Office\OneNote\AddIns\RecallTape.AddIn',
     'HKCU:\SOFTWARE\Microsoft\Office\OneNote\AddIns\RecallTape.AddIn',
     'HKCU:\SOFTWARE\Classes\recalltape',
     'HKCU:\SOFTWARE\Policies\Microsoft\Office\16.0\Common\Security\Trusted Protocols\All Applications\recalltape:'
