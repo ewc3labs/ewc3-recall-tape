@@ -50,6 +50,27 @@ search the roadmap **including Parked / Retired** — the same thing gets notice
 
 **Items:**
 
+- [x] Paul's shared notebook arrived with sync conflicts ALREADY on it — first open, his own history
+      across his own devices, not ours. The lesson is not blame, it is that conflicted pages are a
+      normal condition of real notebooks. And the API cannot see conflict state at all — no attribute
+      exists anywhere in the schema — so we tape them blind. [RT-32].
+- [ ] Unknown and worth an hour before the study loop: on a conflicted page, does `GetPageContent`
+      return the side the user is looking at? Does a tape survive manual resolution, or vanish with
+      the losing side and leave markers pointing at nothing?
+- [x] Version history: NOT in the API (29 methods, none touch it). But `GetSpecialLocation(slBackUpFolder)`
+      + `OpenHierarchy(path, cftNone)` + `GetPageContent` chains into a real read-the-old-version path,
+      and `SectionGroup/@isRecycleBin` enumerates deleted pages. OneNote had ALREADY backed the shared
+      notebook up locally, dated before we touched it.
+- [ ] Tell users the backup folder exists. It is the honest answer to "what if this eats my notes", it
+      costs one line of UI, and it is true today with no work from us.
+- [ ] Does `UpdatePageContent` accept a page fragment — just our element and its objectID — instead of
+      the whole page? Documented, but OneMore always sends whole pages, so it is untrodden. A smaller
+      write is a better position against a sync layer we cannot inspect.
+- [ ] A study loop that writes on every reveal multiplies that footprint. Decide before [RT-16]
+      whether reveal state must persist at all, or can live in memory for the session.
+- [ ] Microsoft now pops a Copilot affordance wherever you click on a page. Two notes: it may collide
+      with Ctrl+click-to-peek, worth watching; and it makes the [RT-09] mascot a parody of something
+      *currently shipping* rather than a nostalgia joke. Arguably better.
 - [x] Free tape box when nothing is selectable, dragged onto the target — Wilson's design, [RT-24],
       proven same day. Works because our tape IS a one:Image, so OneNote already gives it move and
       resize handles; we place an object and get out of the way.

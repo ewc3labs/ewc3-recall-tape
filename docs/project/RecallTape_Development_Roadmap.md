@@ -31,7 +31,7 @@ not a summary of them.
 
 | Series | Last Num | Series Description |
 | --- | --- | --- |
-| RT | RT-31 | RecallTape feature slices and fixes |
+| RT | RT-32 | RecallTape feature slices and fixes |
 
 `Last Num` is a cache over the Delivery Index, not a second source of truth — the IDs in the tables are
 authoritative. When minting, take the next number **and** confirm it is unused across every sub-table,
@@ -88,6 +88,7 @@ then bump this cell in the same edit.
 | ID | State | Slice | Est | Doc | Status |
 | --- | --- | --- | --- | --- | --- |
 | RT-12 | ⬜ planned | Re-read and retry on stale-timestamp writes | S | — | 0x80042010 seen live |
+| RT-32 | ⬜ planned | Survive taping a page that is in sync conflict | M | — | API cannot see conflict state at all |
 | RT-20 | ⬜ planned | Anchor tapes to an object, move them when it moves | M | — | blocked in practice by RT-07 |
 | RT-07 | ⬜ planned | Does objectID survive a sync round-trip | S | — | now testable — 2 machines share a notebook |
 

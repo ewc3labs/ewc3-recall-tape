@@ -268,6 +268,66 @@ material**, and a public issue is publication.
 **Consequence:** "attach the page XML" is never a one-click feature. It needs a scrubber that strips
 paths, identity and content, and it needs the user to see what will be sent before it is sent.
 
+## 10. Sync conflicts exist and are invisible to us
+
+Opening a shared notebook for the first time showed OneNote's manual "sync conflict" markers,
+already present, from the owner's own history across his devices. **Nothing to do with RecallTape** —
+the notebook arrived in that state before our add-in ever touched it.
+
+That is the point. It means conflicted pages are a *normal ambient condition* of the notebooks we
+will be asked to tape, not an edge case we might provoke.
+
+**And the API cannot see them.** There is no `isConflictPage`, no conflict element, nothing in the
+page or hierarchy schema — checked. We cannot detect a conflicted page, warn about one, or decline
+to write into one. The nearest relative is `Page/@hasFutureContent` (content written by a newer
+OneNote than the one now reading it), which is a different symptom of the same multi-client problem.
+
+### Is there version history? Not in the API. But there is a recovery path.
+
+Asked directly, and worth having the answer written down. Of the 29 methods on `IApplication`, **not one
+touches page history** — no `GetPageVersions`, no version parameter on `GetPageContent`. OneNote the
+*application* has page versions (History tab) and a recycle bin; OneNote the *API* does not expose either
+as history.
+
+What the API does expose, which adds up to the same thing:
+
+- `GetSpecialLocation(slBackUpFolder)` — the automatic backup folder.
+- `OpenHierarchy(path, ...)` takes a **file path** with `cftNone`, so a backup `.one` opens as a section
+  and yields an objectID.
+- `GetHierarchy` then `GetPageContent` on that objectID reads the **old** page XML.
+- Separately, `SectionGroup/@isRecycleBin` marks the recycle bin, so deleted pages are enumerable.
+
+Chained, that is a working recovery and diff path: read what a page looked like at backup time and
+compare it to now. Enough to answer "did the tape survive?" empirically rather than by argument.
+
+**And it is not hypothetical.** OneNote had already backed the shared notebook up locally — 15 `.one`
+files, one section of it 153 MB — dated before our add-in touched anything. The safety net was already
+under us. Users should be told it exists; it is the honest answer to "what if this thing eats my notes."
+
+Note the scale in that number. A 153 MB section is the working environment, not an outlier.
+
+So we will tape conflicted pages blind. What is unknown, and worth an hour before the study loop:
+
+- Does `GetPageContent` return the page the user is looking at, or one side of the conflict?
+- Does a tape survive the user resolving the conflict manually, or is it discarded with the losing
+  side — leaving `RecallTape:` markers pointing at content that no longer exists?
+- Does `UpdatePageContent` on a conflicted page make the conflict worse?
+
+Two properties bear on it, and only one is settled:
+
+- **Optimistic concurrency, already on.** We pass the real `expectedLastModified` with `force: false`,
+  so OneNote refuses a stale write rather than clobbering — the reason we declined OneMore's
+  `DateTime.MinValue` + `force: true`. This protects against overwriting a change we did not see. It
+  says nothing about conflict resolution, which happens below us.
+- **We write the whole page back.** `UpdatePageContent` takes the entire page, so taping one word
+  rewrites every element on a lecture page. This has not been shown to cause anything. It is simply a
+  larger footprint than the change deserves, and a larger footprint is a worse position from which to
+  meet a sync layer we cannot inspect. Whether the API accepts a partial page — just our element and
+  its `objectID` — is untested; the reference implementation always sends whole pages.
+
+**Consequence:** write as little as possible, as rarely as possible. That is also an argument against a
+study loop that persists reveal state on every interaction. That is `RT-32`.
+
 ## Open questions this raises
 
 - Does `objectID` survive a sync round-trip between two machines? That decides whether it is a durable
