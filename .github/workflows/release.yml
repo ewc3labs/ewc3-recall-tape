@@ -113,10 +113,16 @@ jobs:
         with:
           tag_name: ${{ env.TAG }}
           name: RecallTape ${{ env.TAG }}
-          # Pre-alpha ships as a prerelease and as a DRAFT: nothing becomes public until a human
-          # looks at it. Cheap insurance while the install story is still a script.
+          # DRAFT stays on deliberately: nothing becomes public until a human looks at it. Cheap
+          # insurance while the install story is still a script and RT-14 is open. Publishing is one
+          # command - `gh release edit <tag> --draft=false`.
+          #
+          # prerelease is deliberately OFF, and it is a real trade. GitHub's /releases/latest resolves
+          # to the newest non-draft NON-PRERELEASE release, so flagging it as a prerelease would break
+          # the permanent download link the README depends on. "Alpha" is still stated in the release
+          # title, the first line of the body, the README status section and its badge - four signals.
+          # The flag was the only one that broke a download.
           draft: true
-          prerelease: true
           # Both, not either. GitHub PRE-PENDS `body` to the notes it generates, so the hand-written
           # install instructions stay at the top where a first-time visitor needs them, and the
           # "What's Changed" commit list lands underneath for anyone who cares what moved.
@@ -125,7 +131,7 @@ jobs:
             RecallTape-install.zip
             RecallTape-install.zip.sha256
           body: |
-            **Pre-alpha.** Taping and peeking work on real notes. Expect rough edges.
+            **Alpha.** Taping and peeking work on real notes. Things will break — please open an issue when they do.
 
             ## Install
 

@@ -11,7 +11,7 @@
 Active-recall masking for Microsoft OneNote — the Goodnotes-style tape tool
 that OneNote never shipped.
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE) [![Status: pre-alpha](https://img.shields.io/badge/status-pre--alpha-orange.svg)](#status) [![Made by EWC3 Labs](https://img.shields.io/badge/EWC3-Labs-1f6feb.svg)](https://github.com/ewc3labs) [![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-ffdd00?logo=buymeacoffee&logoColor=black)](https://www.buymeacoffee.com/ewc3labs)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE) [![Status: alpha](https://img.shields.io/badge/status-alpha-orange.svg)](#status) [![Made by EWC3 Labs](https://img.shields.io/badge/EWC3-Labs-1f6feb.svg)](https://github.com/ewc3labs) [![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-ffdd00?logo=buymeacoffee&logoColor=black)](https://www.buymeacoffee.com/ewc3labs)
 
 </div>
 
@@ -64,9 +64,10 @@ and no second app to sync.
 
 ## Status
 
-**Pre-alpha, but installable.** Taping and peeking work on real notes. It is not signed, there is no
-proper installer yet, and it has not been through anyone's exam week. Expect rough edges and tell us
-about them.
+**Alpha.** Taping and peeking work on real notes, and you can install it. It is not signed, the
+installer is a script rather than an MSI, and it has not been through anyone's exam week yet. Things
+will break. [Tell us when they do](https://github.com/ewc3labs/ewc3-recall-tape/issues) — that is what
+an alpha is for.
 
 ## Install
 

@@ -5,7 +5,9 @@ All notable changes to RecallTape are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.0.1] - 2026-08-13
+
+First public release. Alpha: it works, it is not finished, and it has not met a real exam week.
 
 ### Added
 - Repository scaffolding: README, AGENTS.md, license, CI, issue templates, docs structure.
@@ -71,4 +73,4 @@ versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - The COM surrogate holds the built DLL open; OneNote must be closed before a rebuild.
 
 ### Notes
-- Pre-alpha. No installable build yet.
+- Alpha. Installable, unsigned, and actively changing.
