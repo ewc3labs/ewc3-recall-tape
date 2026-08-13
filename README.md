@@ -73,13 +73,16 @@ about them.
 **Requires:** Windows, OneNote **desktop** (the Office one, not the Store app), and .NET Framework 4.8 —
 which is already on every Windows 10/11 machine.
 
-1. Go to [**Releases**](https://github.com/ewc3labs/ewc3-recall-tape/releases) and open the latest one
-2. Download **`RecallTape-<version>-install.zip`**
-   - *not* "Source code (zip)" — GitHub adds those automatically and they are not the program
-3. **Extract it somewhere permanent** — `C:\Tools\RecallTape` is fine. RecallTape runs from where you
+### ⬇ [Download RecallTape](https://github.com/ewc3labs/ewc3-recall-tape/releases/latest/download/RecallTape-install.zip)
+
+1. **Extract it somewhere permanent** — `C:\Tools\RecallTape` is fine. RecallTape runs from where you
    extract it, so don't unzip into Downloads and then tidy up
-4. Double-click **`Install RecallTape.cmd`** and say yes to the admin prompt
-5. Restart OneNote
+2. Double-click **`Install RecallTape.cmd`** and say yes to the admin prompt
+3. Restart OneNote
+
+*(That link always fetches the newest version. If you would rather browse,
+[the releases page](https://github.com/ewc3labs/ewc3-recall-tape/releases/latest) has it under Assets —
+grab `RecallTape-install.zip`, not "Source code (zip)".)*
 
 You'll find a **RecallTape** tab in the ribbon.
 
