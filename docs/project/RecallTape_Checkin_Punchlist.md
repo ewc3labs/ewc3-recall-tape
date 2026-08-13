@@ -57,9 +57,16 @@ search the roadmap **including Parked / Retired** — the same thing gets notice
       `backgroundImage="true"`; OneNote never lets the user select it, so nothing ever arrives marked
       `selected="all"` and selection-driven taping cannot reach it. Needs a way to specify a region
       without selecting an object.
-- [ ] Workaround available today, worth telling him: scribble over the area with the pen, select the
-      ink, hit **Tape**. The overlay covers the ink's bounding box, which covers whatever is beneath it.
-      Ugly, and it works right now.
+- [x] Workaround available today, confirmed on a real page: scribble over the area with the pen, select
+      the ink, hit **Tape**. Ink is selectable and positioned, so its bounding box becomes the tape.
+- [x] Do background images carry `OCRData`? — **yes**, and it is better than hoped. A PowerPoint
+      printout becomes 39 background images, every one OCR'd, 449 tokens across the deck. [RT-06]
+      unblocked: occluding a term on a lecture slide needs no drawing at all.
+- [x] *"we need an easy button to open a GH issue from OneNote"* — [RT-25] minted in roadmap to
+      address, gated behind [RT-26]. One page of Paul's notes contains his username, his school and
+      course folders, his full name, four Microsoft account CIDs, the page title, and the OCR'd text of
+      all 39 lecture slides. The last of those is also somebody else's copyrighted material, and a
+      public issue is publication. "Attach the XML" cannot be one click.
 - [ ] Does a background image carry `OCRData`? If so, RT-06 reaches it too and Paul's printouts become
       tapeable by word rather than by rectangle.
 

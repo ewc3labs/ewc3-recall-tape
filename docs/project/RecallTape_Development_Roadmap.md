@@ -19,8 +19,9 @@ AsOf: 2026-08-13
 ## Current Focus
 
 1. `RT-24` — next; the first thing the real user asked for after it worked
-2. `RT-12` — then; a study loop cannot sit on writes that fail without retrying
-3. `RT-15` + `RT-16` — the actual product: a hotkey and a loop, not a ribbon button
+2. `RT-26` — before any reporter ships; page XML carries names, paths and whole lectures
+3. `RT-12` — then; a study loop cannot sit on writes that fail without retrying
+4. `RT-15` + `RT-16` — the actual product: a hotkey and a loop, not a ribbon button
 
 ## Last Numbers
 
@@ -29,7 +30,7 @@ not a summary of them.
 
 | Series | Last Num | Series Description |
 | --- | --- | --- |
-| RT | RT-24 | RecallTape feature slices and fixes |
+| RT | RT-26 | RecallTape feature slices and fixes |
 
 `Last Num` is a cache over the Delivery Index, not a second source of truth — the IDs in the tables are
 authoritative. When minting, take the next number **and** confirm it is unused across every sub-table,
@@ -67,8 +68,15 @@ then bump this cell in the same edit.
 | --- | --- | --- | --- | --- | --- |
 | RT-04 | 🟦 coded | Overlay a whole selected image or ink group | M | — | works; sub-region is RT-06 |
 | RT-05 | ⬜ planned | Cluster InkDrawing boxes to tape handwriting | L | — | zero InkWord in 11,708 strokes — we segment |
-| RT-06 | ⬜ planned | Occlude part of an image using OCRToken boxes | L | — | 92,558 tokens available; Paul's core case |
-| RT-24 | ⬜ planned | Tape a region that cannot be selected | M | — | background images; Paul asked within minutes |
+| RT-06 | ⬜ planned | Occlude part of an image using OCRToken boxes | L | — | unblocked — printout slides carry OCRData |
+| RT-24 | ⬜ planned | Tape a region that cannot be selected | M | — | backgrounds are always selected=none |
+
+### Reporting and privacy
+
+| ID | State | Slice | Est | Doc | Status |
+| --- | --- | --- | --- | --- | --- |
+| RT-26 | ⬜ planned | Scrub page XML of identity and content | M | — | blocks RT-25 — paths, names, CIDs, OCR text |
+| RT-25 | ⬜ planned | Report an issue from inside OneNote | L | — | needs RT-26; consent per attachment |
 
 ### Robustness
 

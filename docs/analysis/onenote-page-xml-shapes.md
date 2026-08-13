@@ -217,6 +217,57 @@ peek costs a 12 KB read and a 70-byte write instead of 50 KB.
 in any document -- so it accepts only `verb/guid`, and the add-in re-validates on receipt rather than
 trusting an executable a hostile caller could invoke directly.
 
+## 8. Background images: why some things cannot be taped
+
+Measured 2026-08-13 across three real pages.
+
+**A page background is a `one:Image` with `backgroundImage="true"`.** OneNote never lets the user
+select one, so it is **always `selected="none"`** no matter where they click. Selection-driven taping
+therefore cannot reach it — not a bug in our selection walk, a property of the content.
+
+**They sit at the BOTTOM of the z-stack** — `z=0..38` on a printout page, while ordinary images were
+`z=391..394`. So the overlay mechanism itself is fine: tape at `z=max+1` covers a background
+comfortably. **The missing capability is naming a region, not covering one.**
+
+**Workaround that works today:** scribble over the area with the pen, select the ink, tape it. Ink is
+selectable and positioned, so its bounding box becomes the tape. Confirmed on a page with 38 ink
+strokes over two background images.
+
+### A PowerPoint attachment becomes 39 background images
+
+Inserting a `.pptx` printout produces:
+
+| Element | What it is |
+| --- | --- |
+| `one:InsertedFile` | the original file — `pathSource`, `pathCache`, `preferredName` |
+| `one:XPSFile` | the rendered document, `xpsFileIndex` + `idDocument` |
+| `one:Image` × 39 | one per slide, every one `backgroundImage="true"` **and** `isPrintOut="true"` |
+
+**Every one of those 39 carried `OCRData`** — 449 `OCRToken`s across the deck.
+
+That unblocks the interesting half of the feature: a lecture printout is not an opaque picture, it is
+39 OCR'd pages with a bounding box per word. **Occluding a term on a slide is reachable without the
+user drawing anything** — which is a better feature than the one that was asked for.
+
+## 9. Page XML is full of personal data
+
+Anything that ships page XML off the machine — a bug reporter, a support attachment, a paste into an
+issue — is handling this. From ONE page of a real notebook:
+
+| Leak | Example |
+| --- | --- |
+| Local paths, incl. usernames | `C:\Users\pkrei\OneDrive\00 LECOM\Anatomy\Radiology\SPINE (5) (4).pptx` |
+| Author name and initials | `author="paul reilley"`, `authorInitials="pr"` |
+| Microsoft account IDs | `cid=...` inside `authorResolutionID`, 4 per page |
+| Page title | `Rad Spine` |
+| **Full OCR text of every slide** | 39 `OCRText` blocks — the entire lecture |
+
+That last row is not only a privacy question. Lecture slides are **someone else's copyrighted
+material**, and a public issue is publication.
+
+**Consequence:** "attach the page XML" is never a one-click feature. It needs a scrubber that strips
+paths, identity and content, and it needs the user to see what will be sent before it is sent.
+
 ## Open questions this raises
 
 - Does `objectID` survive a sync round-trip between two machines? That decides whether it is a durable
