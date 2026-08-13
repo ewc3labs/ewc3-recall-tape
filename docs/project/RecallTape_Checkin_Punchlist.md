@@ -37,6 +37,34 @@ search the roadmap **including Parked / Retired** — the same thing gets notice
 
 ---
 
+## Check-in — 2026-08-13 (Paul installs it, and immediately wants more)
+
+> Context: v0.0.1 published. Paul installed it himself from the release zip, on his Snapdragon X Elite
+> Surface, with no help beyond the README — which closes both open shipping slices at once, on
+> hardware nobody here owns.
+
+**Decisions (Wilson, 2026-08-13):**
+
+- Feature requests from Paul go to GitHub Issues with screenshots, not to this punchlist. He is a user
+  now, not a bystander, and users file issues.
+
+**Items:**
+
+- [x] *"Okay it works!"* — install from the release zip succeeded on a machine that did not build it,
+      on ARM64. Closes [RT-14] and [RT-23], both of which were reasoned but untested until now.
+- [x] *"Now can it be done over top of a background image? Like something not selectable"* —
+      [RT-24] minted in roadmap to address. A page background is a `one:Image` with
+      `backgroundImage="true"`; OneNote never lets the user select it, so nothing ever arrives marked
+      `selected="all"` and selection-driven taping cannot reach it. Needs a way to specify a region
+      without selecting an object.
+- [ ] Workaround available today, worth telling him: scribble over the area with the pen, select the
+      ink, hit **Tape**. The overlay covers the ink's bounding box, which covers whatever is beneath it.
+      Ugly, and it works right now.
+- [ ] Does a background image carry `OCRData`? If so, RT-06 reaches it too and Paul's printouts become
+      tapeable by word rather than by rectangle.
+
+---
+
 ## Check-in — 2026-08-12 (Paul's requirements, over Telegram)
 
 > Context: Wilson shared the repo mid-build. Paul — the actual user, the one who asked the original

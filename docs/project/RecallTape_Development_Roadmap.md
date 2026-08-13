@@ -14,14 +14,13 @@
 
 ---
 
-AsOf: 2026-08-12
+AsOf: 2026-08-13
 
 ## Current Focus
 
-1. `RT-14` — next; blocks publishing v0.0.1 to Paul
+1. `RT-24` — next; the first thing the real user asked for after it worked
 2. `RT-12` — then; a study loop cannot sit on writes that fail without retrying
 3. `RT-15` + `RT-16` — the actual product: a hotkey and a loop, not a ribbon button
-4. `RT-23` — blocked on Paul; only his Surface can prove the ARM64 work
 
 ## Last Numbers
 
@@ -30,7 +29,7 @@ not a summary of them.
 
 | Series | Last Num | Series Description |
 | --- | --- | --- |
-| RT | RT-23 | RecallTape feature slices and fixes |
+| RT | RT-24 | RecallTape feature slices and fixes |
 
 `Last Num` is a cache over the Delivery Index, not a second source of truth — the IDs in the tables are
 authoritative. When minting, take the next number **and** confirm it is unused across every sub-table,
@@ -48,7 +47,9 @@ then bump this cell in the same edit.
 | RT-02 | 💨 proven | Add-in loads and reads page XML | M | — | proven 2026-08-12 |
 | RT-03 | 💨 proven | Cover a selection and uncover it | M | — | proven 2026-08-12 |
 | RT-11 | 💨 proven | Click-to-peek on overlay tape | M | — | proven 2026-08-12 — ~45ms |
-| RT-13 | 💨 proven | Release pipeline to a draft GitHub Release | S | — | proven 2026-08-12 — draft, unpublished |
+| RT-13 | 💨 proven | Release pipeline to a draft GitHub Release | S | — | shipped 2026-08-13 — v0.0.1 public |
+| RT-14 | 💨 proven | Install from the release zip, start to finish | S | — | proven 2026-08-13 — Paul, not our machine |
+| RT-23 | 💨 proven | Verify the add-in loads on ARM64 | S | — | proven 2026-08-13 — Snapdragon X Elite |
 
 ### The product — none of this exists yet
 
@@ -67,6 +68,7 @@ then bump this cell in the same edit.
 | RT-04 | 🟦 coded | Overlay a whole selected image or ink group | M | — | works; sub-region is RT-06 |
 | RT-05 | ⬜ planned | Cluster InkDrawing boxes to tape handwriting | L | — | zero InkWord in 11,708 strokes — we segment |
 | RT-06 | ⬜ planned | Occlude part of an image using OCRToken boxes | L | — | 92,558 tokens available; Paul's core case |
+| RT-24 | ⬜ planned | Tape a region that cannot be selected | M | — | background images; Paul asked within minutes |
 
 ### Robustness
 
@@ -81,8 +83,6 @@ then bump this cell in the same edit.
 
 | ID | State | Slice | Est | Doc | Status |
 | --- | --- | --- | --- | --- | --- |
-| RT-14 | 🟦 coded | Install from the release zip, start to finish | S | — | written, never run — blocks publishing |
-| RT-23 | 🟧 blocked | Verify the add-in loads on ARM64 | S | — | blocked on Paul's Surface |
 | RT-21 | ⬜ planned | Code signing, so SmartScreen stops warning | M | — | needs a certificate; costs money |
 | RT-22 | ⬜ planned | MSI installer to replace zip + script | L | — | after RT-21; WiX builds headless |
 | RT-10 | ⬜ planned | Re-sequence PLAN.md phases to match real notes | S | — | flagged in PLAN.md, not yet done |
