@@ -172,6 +172,51 @@ on the slide"* and place the overlay at coordinates OneNote supplied, instead of
 rectangles. It also restores the Anki path that 5a took away: the content under tape on a printout is
 **known text**, even though handwriting is not.
 
+## 7. Click-to-peek: the three-process chain
+
+`origins.md` rated clicking a tape strip directly at 7-8/10 difficulty and steered to hotkeys instead.
+It works -- and it needs three processes, because OneNote will not serve an external caller.
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant ON as OneNote
+    participant H as ProtocolHandler.exe
+    participant A as Add-in (dllhost surrogate)
+
+    U->>ON: Ctrl+click the tape strip
+    ON->>H: shell-executes recalltape://toggle/{guid}
+    Note over H: validates, then couriers.<br/>CANNOT touch the page --<br/>an external process gets a<br/>dead Application on this build
+    H->>A: named pipe "RecallTape.Commands"
+    A->>ON: GetPageContent / UpdatePageContent
+    ON-->>U: tape toggles, ~45ms
+```
+
+**Why a courier and not just the handler:** external automation is dead. Only code inside the surrogate
+can touch a page, so the outside world cannot reach in and the add-in has to listen. Same shape OneMore
+uses for `onemore://`.
+
+**What makes it clickable:** `one:Image` carries a `hyperlink` attribute, and OneNote both preserves it
+through `UpdatePageContent` and renders it as a real link with hover text. Following it needs
+**Ctrl+click**, OneNote's convention.
+
+**Office warns about unfamiliar protocols** unless the scheme is registered under
+`Policies/Microsoft/Office/16.0/Common/Security/Trusted Protocols/All Applications/`. Without that
+entry, every peek costs a dialog. Found by reading OneMore's `Registry.wxs`.
+
+**Peek swaps the payload; it does not delete the element.** Toggling replaces the image bytes with a
+fully transparent 70-byte PNG and flips the `alt` state marker. Position, size, identity and hyperlink
+survive, so revealed tape stays clickable and can be put back -- and the state lives in the element
+rather than a side table that could drift out of sync with the page.
+
+**Never re-read binary you are about to overwrite.** A `piBasic` read returns `one:CallbackID` rather
+than inline `one:Data`. The fix is to drop whichever reference is present and write fresh `Data`, so a
+peek costs a 12 KB read and a 70-byte write instead of 50 KB.
+
+**Both surfaces validate.** The courier is reachable by anyone -- a `recalltape://` link can be planted
+in any document -- so it accepts only `verb/guid`, and the add-in re-validates on receipt rather than
+trusting an executable a hostile caller could invoke directly.
+
 ## Open questions this raises
 
 - Does `objectID` survive a sync round-trip between two machines? That decides whether it is a durable

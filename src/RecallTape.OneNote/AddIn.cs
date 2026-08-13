@@ -67,7 +67,14 @@ namespace RecallTape.OneNote
         }
 
         public void OnAddInsUpdate(ref Array custom) { }
-        public void OnStartupComplete(ref Array custom) { Log("OnStartupComplete"); }
+        public void OnStartupComplete(ref Array custom)
+        {
+            Log("OnStartupComplete");
+            // Start listening for clicks on tape strips, couriered in by the protocol handler.
+            // Background thread, so it can never keep OneNote alive.
+            try { StartCommandService(); }
+            catch (Exception ex) { Log("command service failed to start: " + ex.Message); }
+        }
         public void OnBeginShutdown(ref Array custom) { Log("OnBeginShutdown"); }
 
         // ---- IRibbonExtensibility ----------------------------------------------------------
@@ -82,7 +89,7 @@ namespace RecallTape.OneNote
         <group id='rtTape' label='Tape'>
           <button id='rtTapeSel' label='Tape' size='large'
                   imageMso='HighlightColorPicker' onAction='TapeSelection'/>
-          <button id='rtUntape' label='Remove Tape' size='large'
+          <button id='rtUntape' label='Remove All Tape' size='large'
                   imageMso='ClearFormatting' onAction='RemoveTape'/>
         </group>
         <group id='rtSpike' label='Spike'>

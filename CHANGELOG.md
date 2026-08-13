@@ -39,6 +39,11 @@ versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   one from inside a OneNote-spawned surrogate — the gate is on the caller, not the API.
 
 ### Added
+- **Tape and peek.** `Tape` covers the selection, `Remove All Tape` clears the page, and Ctrl+clicking an
+  overlay toggles it between covered and revealed (~45ms). Text and positioned content use different
+  mechanisms, because the XML has two anchor worlds.
+- `RecallTape.ProtocolHandler.exe` plus a named-pipe command service — the `recalltape://` chain that
+  makes tape clickable, since OneNote will not serve an external process.
 - `SurveyNotebooks` command — walks every open notebook and reports content-type totals, structural
   skeletons, and `recognizedText` samples.
 - `docs/analysis/onenote-page-xml-shapes.md` — what OneNote page XML actually contains, measured.
