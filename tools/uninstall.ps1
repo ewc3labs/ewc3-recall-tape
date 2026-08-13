@@ -41,6 +41,32 @@ if ((Test-Path $regasm) -and (Test-Path $dll)) {
 # survive uninstall AND be un-tickable from OneNote's COM Add-ins dialog without elevation, because
 # clearing that checkbox writes LoadBehavior to whichever hive the key lives in. Sweeping both is
 # cheap; leaving a machine-wide registration behind is not.
+<#
+    Remove a registry key that belongs to RecallTape - and nothing else.
+
+    WHY THIS EXISTS: on 2026-08-13 this script deleted HKCU\SOFTWARE\Classes\CLSID and
+    HKCU\SOFTWARE\Classes\AppID in their entirety, on a real machine. The paths were built as
+    'HKCU:\SOFTWARE\Classes\CLSID\' + $Clsid inside an array literal, where PowerShell's comma
+    operator binds tighter than +, so the GUID was never appended. Remove-Item -Recurse -Force then
+    received the PARENT key.
+
+    The string bug was the trigger. The absence of a guard is why it was destructive instead of a
+    no-op, so the guard is the actual fix: every key we delete must name RecallTape or our CLSID.
+    A path that does not is a bug by construction, and we refuse rather than proceed.
+#>
+function Remove-RecallTapeKey {
+    param([Parameter(Mandatory)][string] $Path)
+
+    if ($Path -notmatch 'RecallTape|recalltape|AA568A3C-2A53-479B-B188-2367D2E27CE4') {
+        Write-Host "  REFUSED (does not belong to RecallTape): $Path" -ForegroundColor Red
+        return
+    }
+    if (Test-Path $Path) {
+        Remove-Item $Path -Recurse -Force -ErrorAction SilentlyContinue
+        Write-Host "  removed $Path"
+    }
+}
+
 foreach ($key in @(
     "HKLM:\SOFTWARE\Classes\AppID\$Clsid",
     'HKLM:\SOFTWARE\Microsoft\Office\OneNote\AddIns\RecallTape.AddIn',
@@ -48,10 +74,7 @@ foreach ($key in @(
     'HKCU:\SOFTWARE\Classes\recalltape',
     'HKCU:\SOFTWARE\Policies\Microsoft\Office\16.0\Common\Security\Trusted Protocols\All Applications\recalltape:'
 )) {
-    if (Test-Path $key) {
-        Remove-Item $key -Recurse -Force -ErrorAction SilentlyContinue
-        Write-Host "  removed $key"
-    }
+    Remove-RecallTapeKey $key
 }
 
 Write-Host ""
