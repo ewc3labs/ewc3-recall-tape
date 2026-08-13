@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{7B938B82-866A-404F-8493-2F4C42ECFEF5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RecallTape.OneNote", "src\RecallTape.OneNote\RecallTape.OneNote.csproj", "{F04A95C8-404A-4A08-B453-DCD7CFAA19F0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RecallTape.ProtocolHandler", "src\RecallTape.ProtocolHandler\RecallTape.ProtocolHandler.csproj", "{6A505DA3-75A6-4E4F-A82A-860DE6DB3CDC}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F04A95C8-404A-4A08-B453-DCD7CFAA19F0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F04A95C8-404A-4A08-B453-DCD7CFAA19F0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F04A95C8-404A-4A08-B453-DCD7CFAA19F0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F04A95C8-404A-4A08-B453-DCD7CFAA19F0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6A505DA3-75A6-4E4F-A82A-860DE6DB3CDC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6A505DA3-75A6-4E4F-A82A-860DE6DB3CDC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6A505DA3-75A6-4E4F-A82A-860DE6DB3CDC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6A505DA3-75A6-4E4F-A82A-860DE6DB3CDC}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{F04A95C8-404A-4A08-B453-DCD7CFAA19F0} = {7B938B82-866A-404F-8493-2F4C42ECFEF5}
+		{6A505DA3-75A6-4E4F-A82A-860DE6DB3CDC} = {7B938B82-866A-404F-8493-2F4C42ECFEF5}
+	EndGlobalSection
+EndGlobal

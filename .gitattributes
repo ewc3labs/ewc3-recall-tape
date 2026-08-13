@@ -43,3 +43,5 @@
 *.stl   binary
 *.3mf   binary
 *.one   binary
+*.dll   binary
+*.exe   binary

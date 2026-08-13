@@ -5,7 +5,12 @@
          what is already on every Windows 10/11 machine. A student installing a study tool should
          not have to install a runtime first. -->
     <TargetFramework>net48</TargetFramework>
-    <PlatformTarget>x64</PlatformTarget>
+    <!-- AnyCPU, deliberately. A COM add-in is loaded INTO a host process, so an x64-only assembly
+         simply cannot load on an ARM64 machine - which is the target hardware, since Snapdragon
+         Surfaces are exactly where lecture notes get taken with a pen. AnyCPU JITs to whatever the
+         host is: x64 on a desktop, native ARM64 on a Surface, no emulation and no second build.
+         Both vendored interop assemblies are MSIL, so nothing else pins us to an architecture. -->
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <LangVersion>latest</LangVersion>
     <AssemblyName>RecallTape.OneNote</AssemblyName>
     <RootNamespace>RecallTape.OneNote</RootNamespace>
@@ -33,10 +38,10 @@
          type equivalence. OneNote still constructed the class in the surrogate and never called
          OnConnection. The PIA is the only thing that makes the add-in contract work.
 
-         HintPath because SDK-style projects do not probe the GAC. -->
+         Vendored in lib/ so the build is hermetic - see lib/README.md. Resolving from the GAC worked
+         on exactly one machine, and only because OneMore's installer had put it there. -->
     <Reference Include="Extensibility">
-      <HintPath Condition="Exists('$(CommonProgramFiles)\Microsoft Shared\MSEnv\PublicAssemblies\extensibility.dll')">$(CommonProgramFiles)\Microsoft Shared\MSEnv\PublicAssemblies\extensibility.dll</HintPath>
-      <HintPath Condition="!Exists('$(CommonProgramFiles)\Microsoft Shared\MSEnv\PublicAssemblies\extensibility.dll')">$(WinDir)\assembly\GAC\Extensibility\7.0.3300.0__b03f5f7f11d50a3a\Extensibility.dll</HintPath>
+      <HintPath>$(MSBuildThisFileDirectory)..\..\lib\Extensibility.dll</HintPath>
       <EmbedInteropTypes>True</EmbedInteropTypes>
       <Private>False</Private>
     </Reference>
@@ -48,9 +53,9 @@
          interface binds through the vtable instead. -->
     <!-- NOT embedded, and copied local: IApplication in this PIA is not marked ComImport, so the
          compiler refuses to embed it (CS1756). OneMore references it the same way and ships the DLL
-         beside the add-in. -->
+         beside the add-in. Vendored in lib/ - see lib/README.md. -->
     <Reference Include="Microsoft.Office.Interop.OneNote">
-      <HintPath>$(WinDir)\assembly\GAC_MSIL\Microsoft.Office.Interop.OneNote\15.0.0.0__71e9bce111e9429c\Microsoft.Office.Interop.OneNote.dll</HintPath>
+      <HintPath>$(MSBuildThisFileDirectory)..\..\lib\Microsoft.Office.Interop.OneNote.dll</HintPath>
       <EmbedInteropTypes>False</EmbedInteropTypes>
       <Private>True</Private>
     </Reference>

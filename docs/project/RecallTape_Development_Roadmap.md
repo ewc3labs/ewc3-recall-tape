@@ -38,6 +38,7 @@ AsOf: 2026-08-12
 | RT-10 | ⬜ planned | Re-sequence PLAN.md phases to match real notes | 0.5d | — | typed text is 892 of 13,708 elements |
 | RT-11 | 💨 proven | Click-to-peek on overlay tape via Image hyperlink | 2d | — | proven 2026-08-12 — ~45ms per toggle |
 | RT-12 | ⬜ planned | Re-read and retry on stale-timestamp writes | 1d | — | 0x80042010 seen live; study loop writes fast |
+| RT-13 | 🟦 coded | Release pipeline: build, package, draft GitHub Release | 1d | — | started 2026-08-12 — untested until a tag is pushed |
 
 **States:** ⬜ `planned` · 🟦 `coded` · 💨 `proven` (actually run, not just built) · 🟩 `shipped` ·
 🟧 `blocked` · ⏸️ `deferred` · 🟥 `cancelled`
@@ -49,7 +50,7 @@ AsOf: 2026-08-12
 
 | Series | Last Num | Series Description |
 | --- | --- | --- |
-| RT | RT-12 | RecallTape feature slices and fixes |
+| RT | RT-13 | RecallTape feature slices and fixes |
 
 ## Working Rules
 

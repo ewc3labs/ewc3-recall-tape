@@ -1,0 +1,124 @@
+name: Release
+
+# Deliberately unsophisticated, because RecallTape is pre-alpha.
+#
+# No semver bumping, no changelog generation, no signing, no MSI. Tag it, push the tag, get a zip on a
+# GitHub Release. Those things are worth adding when people are installing this; adding them now would
+# be machinery maintained for an audience of two.
+#
+# What this is NOT yet, and what the README promises for public release:
+#   - a signed installer (SmartScreen will warn on an unsigned one - see docs/RAG_Sessions/)
+#   - an MSI that registers the add-in for the user
+# Until then the zip carries an install script the user runs as administrator.
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to publish as (e.g. v0.0.1). Leave blank for a draft named after the run.'
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build and publish
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+          # 8.0 is the BUILD DRIVER only. Both projects target net48, which is what ships on every
+          # Windows 10/11 machine - a student installing a study tool should not install a runtime
+          # first. Do not "fix" this to net8.0.
+
+      - name: Build add-in
+        run: dotnet build src/RecallTape.OneNote/RecallTape.OneNote.csproj -c Release
+
+      - name: Build protocol handler
+        run: dotnet build src/RecallTape.ProtocolHandler/RecallTape.ProtocolHandler.csproj -c Release
+
+      - name: Stage the package
+        shell: pwsh
+        run: |
+          $stage = "stage/RecallTape"
+          New-Item -ItemType Directory -Force -Path $stage | Out-Null
+
+          # The add-in and everything it needs beside it. Extensibility is embedded at compile time
+          # (EmbedInteropTypes), so it is deliberately absent here - there is nothing to ship.
+          Copy-Item "src/RecallTape.OneNote/bin/Release/net48/RecallTape.OneNote.dll" $stage
+          Copy-Item "src/RecallTape.OneNote/bin/Release/net48/Microsoft.Office.Interop.OneNote.dll" $stage
+          Copy-Item "src/RecallTape.ProtocolHandler/bin/Release/net48/RecallTape.ProtocolHandler.exe" $stage
+
+          Copy-Item "tools/install.ps1"   $stage
+          Copy-Item "tools/uninstall.ps1" $stage
+          Copy-Item "LICENSE"             $stage
+          Copy-Item "CHANGELOG.md"        $stage
+
+          # Fail loudly if a file we expect is missing, rather than shipping a zip that cannot install.
+          $required = @(
+            'RecallTape.OneNote.dll',
+            'Microsoft.Office.Interop.OneNote.dll',
+            'RecallTape.ProtocolHandler.exe',
+            'install.ps1'
+          )
+          foreach ($f in $required) {
+            if (-not (Test-Path (Join-Path $stage $f))) { throw "Package is missing $f" }
+          }
+
+          Get-ChildItem $stage | Format-Table Name, Length
+
+      - name: Zip
+        shell: pwsh
+        run: |
+          $tag = if ('${{ github.ref_type }}' -eq 'tag') { '${{ github.ref_name }}' }
+                 elseif ('${{ inputs.tag }}') { '${{ inputs.tag }}' }
+                 else { "run-${{ github.run_number }}" }
+          "TAG=$tag" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          Compress-Archive -Path "stage/RecallTape/*" -DestinationPath "RecallTape-$tag.zip"
+
+      - name: Checksum
+        shell: pwsh
+        run: |
+          $h = Get-FileHash "RecallTape-$env:TAG.zip" -Algorithm SHA256
+          "$($h.Hash)  RecallTape-$env:TAG.zip" | Out-File "RecallTape-$env:TAG.zip.sha256" -Encoding ascii
+          Get-Content "RecallTape-$env:TAG.zip.sha256"
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.TAG }}
+          name: RecallTape ${{ env.TAG }}
+          # Pre-alpha ships as a prerelease and as a DRAFT: nothing becomes public until a human
+          # looks at it. Cheap insurance while the install story is still a script.
+          draft: true
+          prerelease: true
+          files: |
+            RecallTape-${{ env.TAG }}.zip
+            RecallTape-${{ env.TAG }}.zip.sha256
+          body: |
+            **Pre-alpha.** Expect rough edges.
+
+            This is not a signed installer yet — Windows SmartScreen will warn about it.
+
+            ### Install
+            1. Extract the zip somewhere permanent (it is installed *in place*, so do not extract to Downloads and then delete it)
+            2. Right-click `install.ps1` → **Run with PowerShell as Administrator**
+            3. Restart OneNote
+
+            Administrator is required once, to register the COM add-in machine-wide.
+
+            ### Uninstall
+            Run `uninstall.ps1` as Administrator. It removes every registry key and leaves nothing behind.
+
+            ### Requirements
+            - Windows, OneNote **desktop** (the Office one, not the Store app)
+            - .NET Framework 4.8 — already present on every Windows 10/11 machine

@@ -93,6 +93,17 @@ search the roadmap **including Parked / Retired** — the same thing gets notice
       fails. [RT-12] minted in roadmap to address.
 - [ ] Select-to-peek on text is free, and also a leak — a stray drag or Ctrl+A reveals every answer on
       the page. Feature, bug, or both? Needs a design call before the study loop is built.
+- [x] The build silently depended on OneMore being installed — the OneNote PIA was only in the GAC
+      because OneMore's installer put it there (GAC entry dated 2026-08-01, its release date). Both
+      interop assemblies are now vendored in `lib/`, so the build is hermetic. Paul does **not** need
+      OneMore to run RecallTape, and never did.
+- [x] Paul is on a Snapdragon X Elite Surface (ARM64). Two things this forces, both now done:
+      `PlatformTarget=AnyCPU` (an x64-only assembly cannot load into an ARM64 host at all), and the
+      DCOM `LaunchPermission` SDDL (ARM64 does not grant local-launch to BUILTIN\Users, so COM refuses
+      to start dllhost and the add-in never loads). Neither is verified on real ARM64 hardware yet.
+- [ ] Verify on Paul's Surface: does the add-in load, and does click-to-peek work, on real ARM64?
+- [ ] `Ctrl+Alt+T` on non-US layouts — still unchecked, and now more urgent since the target user has
+      a Surface, not the keyboard we test on.
 - [ ] Do `OCRToken` coordinates share the page coordinate space or are they image-relative? Must be
       settled before any overlay is placed from them.
 - [ ] `Ctrl+Alt+T` collides with `AltGr` on Italian/UK keyboard layouts — check before it reaches a README.

@@ -34,7 +34,21 @@ Set-ItemProperty $clsidKey -Name 'AppID' -Value $Clsid
 New-Item -Path $appidKey -Force | Out-Null
 Set-ItemProperty $appidKey -Name '(default)'    -Value 'RecallTape'
 Set-ItemProperty $appidKey -Name 'DllSurrogate' -Value ''
-Write-Host "Surrogate registered: AppID $Clsid DllSurrogate=(empty)"
+
+# LaunchPermission: self-relative security descriptor granting local launch and local activate to
+# Authenticated Users, SYSTEM and Administrators.
+#   SDDL: O:BAG:BAD:(A;;0x0b;;;AU)(A;;0x0b;;;SY)(A;;0x0b;;;BA)
+#
+# WHY THIS IS NOT OPTIONAL: on ARM64 Windows the machine-wide DCOM default launch security is more
+# restrictive than on x64 and does not grant local-launch to BUILTIN\Users. Without this, COM refuses
+# to start dllhost.exe for a non-admin session and the add-in NEVER LOADS -- silently. Snapdragon
+# Surfaces are the target hardware for this product, so that is the common case, not the edge case.
+# Harmless on x64: it just makes the implicit grant explicit. Credit: OneMore's OneMoreSetup/Registry.wxs.
+$sd = '010004801400000024000000000000003400000001020000000000052000000020020000010200000000000520000000200200000200480003000000000014000b00000001010000000000050b000000000014000b000000010100000000000512000000000018000b00000001020000000000052000000020020000'
+$bytes = [byte[]]::new($sd.Length / 2)
+for ($i = 0; $i -lt $bytes.Length; $i++) { $bytes[$i] = [Convert]::ToByte($sd.Substring($i * 2, 2), 16) }
+Set-ItemProperty $appidKey -Name 'LaunchPermission' -Value $bytes -Type Binary
+Write-Host "Surrogate registered: AppID $Clsid DllSurrogate=(empty) + LaunchPermission"
 
 # --- OneNote add-in discovery --------------------------------------------------------------
 # LoadBehavior 3 = load at startup and keep loading. OneNote silently rewrites this to 2 when a

@@ -5,7 +5,12 @@
     <!-- WinExe, not Exe: a console window flashing on screen every time someone clicks a tape strip
          would be worse than no reveal at all. -->
     <TargetFramework>net48</TargetFramework>
-    <PlatformTarget>x64</PlatformTarget>
+    <!-- AnyCPU, deliberately. A COM add-in is loaded INTO a host process, so an x64-only assembly
+         simply cannot load on an ARM64 machine - which is the target hardware, since Snapdragon
+         Surfaces are exactly where lecture notes get taken with a pen. AnyCPU JITs to whatever the
+         host is: x64 on a desktop, native ARM64 on a Surface, no emulation and no second build.
+         Both vendored interop assemblies are MSIL, so nothing else pins us to an architecture. -->
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <LangVersion>latest</LangVersion>
     <AssemblyName>RecallTape.ProtocolHandler</AssemblyName>
     <RootNamespace>RecallTape.ProtocolHandler</RootNamespace>

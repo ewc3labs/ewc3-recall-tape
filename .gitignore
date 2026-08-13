@@ -36,3 +36,8 @@ dist/
 Thumbs.db
 .vscode/
 !.vscode/extensions.json
+
+# Vendored Microsoft interop assemblies. Committed deliberately so the build is hermetic -- see
+# lib/README.md. Without this negation the *.dll rule above silently excludes them and a fresh clone
+# cannot compile, which is exactly the failure vendoring was meant to prevent.
+!lib/*.dll
