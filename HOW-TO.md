@@ -140,6 +140,10 @@ closes, so if the tab is still missing, end any `ONENOTE.EXE` in Task Manager fi
 Extract the *whole* zip before running anything. Running the installer from inside the zip viewer
 leaves the rest of the files behind.
 
+**Where did it install?**
+`C:\Program Files\EWC3 Labs\RecallTape`. The folder you extracted is only a delivery vehicle — once
+the installer has run you can delete it. The uninstaller lives in the installed folder.
+
 **The installer won't run / no "Run as administrator".**
 Use `Install RecallTape.cmd` — double-click it, and it asks for admin itself. You don't need to find
 a right-click option. It also handles PowerShell's execution-policy block for you.
@@ -157,7 +161,7 @@ That's Microsoft's, not ours, and it shows up on every OneNote page whether Reca
 or not. Ignore it.
 
 **Something else.**
-There's a log at `%TEMP%\RecallTape\recalltape.log`. It records what each button did and any errors,
+There's a log at `%LOCALAPPDATA%\EWC3 Labs\RecallTape\recalltape.log`. It records what each button did and any errors,
 with no page content in it. Attach it to an issue.
 
 ---

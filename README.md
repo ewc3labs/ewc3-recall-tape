@@ -78,10 +78,13 @@ which is already on every Windows 10/11 machine.
 
 ### ⬇ [Download RecallTape](https://github.com/ewc3labs/ewc3-recall-tape/releases/latest/download/RecallTape-install.zip)
 
-1. **Extract it somewhere permanent** — `C:\Tools\RecallTape` is fine. RecallTape runs from where you
-   extract it, so don't unzip into Downloads and then tidy up
+1. **Extract the zip anywhere** — Downloads is fine
 2. Double-click **`Install RecallTape.cmd`** and say yes to the admin prompt
 3. Restart OneNote
+4. Delete the folder you extracted, whenever you like
+
+RecallTape installs itself to `C:\Program Files\EWC3 Labs\RecallTape` and runs from there, so the
+folder you extracted stops mattering the moment step 2 finishes.
 
 *(That link always fetches the newest version. If you would rather browse,
 [the releases page](https://github.com/ewc3labs/ewc3-recall-tape/releases/latest) has it under Assets —
@@ -94,14 +97,20 @@ You'll find a **RecallTape** tab in the ribbon.
 Three buttons and one gesture. Covers taping text, ink and unselectable page backgrounds,
 peeking, removing, and what to do when something misbehaves.
 
-Administrator is needed once, to register the add-in with Windows. Everything after that is per-user.
+Administrator is needed once — to copy into Program Files and register a COM class machine-wide.
+There is no per-user install: the DCOM permissions that make RecallTape work on ARM64 are machine
+configuration. OneMore, the add-in most OneNote users already know, is per-machine for the same reason.
+
+Program Files is deliberate rather than tidy: it is the one location a standard user cannot write to,
+so nobody can swap the DLL that OneNote loads. Logs and page dumps live under
+`%LOCALAPPDATA%\EWC3 Labs\RecallTape`, which is per-user and needs no privilege.
 
 > **Windows will warn you.** The download isn't code-signed yet, so SmartScreen flags it as unrecognised
 > — click *More info* → *Run anyway*. That's a real warning about a real gap, not a formality; a signing
 > certificate is on the list before this is something we ask strangers to trust.
 
-**To uninstall:** double-click `Uninstall RecallTape.cmd`. It removes every registry key and leaves nothing
-behind. Your notes are untouched — but tape already on a page stays there as ordinary content, so use
+**To uninstall:** run `Uninstall RecallTape.cmd` from `C:\Program Files\EWC3 Labs\RecallTape`. It removes
+every registry key and the installed folder, and leaves nothing behind. Your notes are untouched — but tape already on a page stays there as ordinary content, so use
 **Remove All Tape** on any page you want cleared *before* uninstalling.
 
 ## How it's built

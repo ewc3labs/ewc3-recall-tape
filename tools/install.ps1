@@ -61,6 +61,40 @@ if (-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administra
 }
 
 
+# --- where RecallTape actually lives --------------------------------------------------------
+# NOT wherever the zip was extracted. That made the extracted folder load-bearing forever ("keep
+# this folder where it is"), and it let the add-in land somewhere weakly permissioned: a folder
+# created under C:\ inherits Authenticated Users:(M), so any signed-in user could swap the DLL that
+# OneNote loads. Measured on a real install, not theorised.
+#
+# Program Files is Users:(RX) - read and execute, no write - which is what a binary Office loads
+# should be. This also matches OneMore, the reference OneNote add-in: a perMachine MSI installing to
+# ProgramFiles6432Folder\River\OneMoreAddIn with user data under AppData. Same shape, same reasons.
+#
+# Per-machine is not really a choice here anyway. The DCOM AppID and LaunchPermission that make the
+# surrogate work on ARM64 are machine-wide config, so a per-user install could not carry them.
+# OneMore does not offer a per-user option either.
+$target = Join-Path $env:ProgramFiles 'EWC3 Labs\RecallTape'
+
+if ($here -ne $target) {
+    Write-Host "Installing RecallTape to $target"
+    try {
+        New-Item -ItemType Directory -Force -Path $target | Out-Null
+        Get-ChildItem -File $here | ForEach-Object {
+            Copy-Item $_.FullName -Destination $target -Force
+        }
+    } catch {
+        Fail ("Could not copy RecallTape into $target." +
+              " If OneNote is running, close it completely and run this again." +
+              " ($($_.Exception.Message))")
+    }
+    $dll = Join-Path $target 'RecallTape.OneNote.dll'
+    $exe = Join-Path $target 'RecallTape.ProtocolHandler.exe'
+} else {
+    Write-Host "Installing RecallTape from $target"
+    Write-Host ""
+}
+
 $regasm = Join-Path $env:WinDir 'Microsoft.NET\Framework64\v4.0.30319\RegAsm.exe'
 if (-not (Test-Path $regasm)) { Fail ".NET Framework 4.x not found. RecallTape needs .NET Framework 4.8." }
 
@@ -79,13 +113,12 @@ try {
     $cb = (Get-ItemProperty "HKLM:\SOFTWARE\Classes\CLSID\$Clsid\InprocServer32" -ErrorAction SilentlyContinue).CodeBase
     if ($cb) {
         $old = Split-Path -Parent ([Uri]$cb).LocalPath
-        if ($old -and $old -ne $here) { $previous = $old }
+        if ($old -and $old -ne $target) { $previous = $old }
     }
 } catch { }
 
 $oneNoteRunning = [bool](Get-Process ONENOTE -ErrorAction SilentlyContinue)
 
-Write-Host "Installing RecallTape from $here"
 if ($previous) {
     Write-Host ""
     Write-Host "  Replacing a previous install at:" -ForegroundColor Cyan
@@ -183,5 +216,11 @@ if ($oneNoteRunning) {
     Write-Host "Done. Start OneNote and look for the RecallTape tab." -ForegroundColor Green
 }
 Write-Host ""
-Write-Host "Keep this folder where it is -- RecallTape runs from here."
-Write-Host "To remove it, double-click 'Uninstall RecallTape.cmd'."
+Write-Host "Installed to: $target"
+if ($here -ne $target) {
+    Write-Host "The folder you extracted is no longer needed - delete it whenever you like."
+}
+Write-Host ""
+# Be explicit about WHICH folder. The line above just told them to delete one.
+Write-Host "To remove RecallTape later, run 'Uninstall RecallTape.cmd' from:"
+Write-Host "  $target"

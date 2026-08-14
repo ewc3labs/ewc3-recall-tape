@@ -39,7 +39,9 @@ namespace RecallTape.OneNote
         // holding the OnConnection reference across the process boundary stops OneNote shutting
         // down. Acquire late, release early, never cache.
 
-        private static readonly string LogDir = Path.Combine(Path.GetTempPath(), "RecallTape");
+        private static readonly string LogDir = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "EWC3 Labs", "RecallTape");
 
         public AddIn()
         {
@@ -113,7 +115,7 @@ namespace RecallTape.OneNote
         // ---- The one command --------------------------------------------------------------
 
         /// <summary>
-        /// Dump the current page, with the selection marked, to %TEMP%\RecallTape\.
+        /// Dump the current page, with the selection marked, to %LOCALAPPDATA%\EWC3 Labs\RecallTape\.
         /// Deliberately read-only: this build has no code path that can modify a page, which makes
         /// it safe to point at any notebook including somebody's real notes.
         /// </summary>
@@ -161,7 +163,7 @@ namespace RecallTape.OneNote
         ///
         /// Reports counts, structural skeletons, and recognizedText samples, plus a full dump of the
         /// first page containing InkWord so the real structure can be read end to end. Summary over
-        /// bulk: 300 pages of raw XML is noise, not evidence. Everything stays in %TEMP%.
+        /// bulk: 300 pages of raw XML is noise, not evidence. Everything stays under %LOCALAPPDATA%.
         /// </summary>
         private const int MaxPages = 300;
         private const int RecognizedTextSamples = 40;

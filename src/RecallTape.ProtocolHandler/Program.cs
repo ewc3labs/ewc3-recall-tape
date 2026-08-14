@@ -73,7 +73,9 @@ namespace RecallTape.ProtocolHandler
         {
             try
             {
-                string dir = Path.Combine(Path.GetTempPath(), "RecallTape");
+                string dir = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "EWC3 Labs", "RecallTape");
                 Directory.CreateDirectory(dir);
                 File.AppendAllText(Path.Combine(dir, "protocol.log"),
                     DateTime.Now.ToString("HH:mm:ss.fff", CultureInfo.InvariantCulture)

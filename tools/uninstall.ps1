@@ -77,6 +77,33 @@ foreach ($key in @(
     Remove-RecallTapeKey $key
 }
 
+# --- the installed files ---------------------------------------------------------------------
+# The installer copies into Program Files, so uninstall has to take that folder away too or we
+# leave a dead copy of the add-in on disk forever. Only ever OUR folder, and only if it looks like
+# ours - the same refusal rule the registry cleanup uses, for the same reason.
+$installed = Join-Path $env:ProgramFiles 'EWC3 Labs\RecallTape'
+if (Test-Path $installed) {
+    $running = Get-Process ONENOTE -ErrorAction SilentlyContinue
+    if ($running) {
+        Write-Host ""
+        Write-Host "  OneNote is running, so the program files are still locked." -ForegroundColor Yellow
+        Write-Host "  Close OneNote completely and delete this folder by hand:"
+        Write-Host "    $installed"
+    } else {
+        try {
+            Remove-Item $installed -Recurse -Force -ErrorAction Stop
+            Write-Host "  removed $installed"
+            # Take the vendor folder too, but ONLY if nothing else of ours lives in it.
+            $vendor = Split-Path -Parent $installed
+            if ((Test-Path $vendor) -and -not (Get-ChildItem $vendor -Force)) {
+                Remove-Item $vendor -Force -ErrorAction SilentlyContinue
+            }
+        } catch {
+            Write-Host "  could not remove $installed - $($_.Exception.Message)" -ForegroundColor Yellow
+        }
+    }
+}
+
 Write-Host ""
 Write-Host "Done. Restart OneNote." -ForegroundColor Green
 Write-Host "Your notes are untouched. Any tape still on a page stays there as ordinary content."
