@@ -100,6 +100,16 @@ namespace RecallTape.OneNote
         private const string TapeSpanStyle =
             "color:" + TapeTextInk + ";background:" + TapeInk + ";mso-highlight:" + TapeInk;
 
+        /// <summary>
+        /// The style a tape is written with RIGHT NOW.
+        ///
+        /// Normally TapeSpanStyle. The Tape Lab in the developer tools points it at a different
+        /// recipe for one operation so recipes can be compared on a real page, side by side, instead
+        /// of argued about. Three separate colour theories today were settled by looking at a dump;
+        /// this is the same idea with a shorter loop.
+        /// </summary>
+        private static string activeTapeStyle = TapeSpanStyle;
+
         /// <summary>A span is ours if background and mso-highlight are both a dark colour.</summary>
         /// <summary>An opening span tag, for the tag walker in StripTape.</summary>
         private static readonly Regex SpanOpenRx =
@@ -122,7 +132,9 @@ namespace RecallTape.OneNote
             RegexOptions.Singleline | RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
         private static readonly Regex DarkFillRx = new Regex(
-            @"(?:background|mso-highlight)\s*:\s*(?:black|#0{3,6}|#1F1F1E|rgb\(\s*(?:[0-9]|[1-2][0-9]|3[01])\s*,)",
+            // Includes white and near-white so the Tape Lab's recipes can still be REMOVED. A
+            // user's own highlight is a colour (yellow, green); ours is always an extreme.
+            @"(?:background|mso-highlight)\s*:\s*(?:black|white|#0{3,6}|#[Ff]{3,6}|#1F1F1E|#0A0A0A|rgb\(\s*(?:[0-9]|[1-2][0-9]|3[01])\s*,)",
             RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
         private static bool IsTapeStyle(string spanAttrs)
@@ -354,7 +366,7 @@ namespace RecallTape.OneNote
         {
             if (text.Length == 0) return;
             if (insideAnchor) { sb.Append(text); return; }   // the anchor carries the style
-            sb.Append("<span style='").Append(TapeSpanStyle).Append("'>").Append(text).Append("</span>");
+            sb.Append("<span style='").Append(activeTapeStyle).Append("'>").Append(text).Append("</span>");
         }
 
         /// <summary>Merge our properties into an anchor's style, keeping whatever was already there.</summary>
@@ -364,10 +376,10 @@ namespace RecallTape.OneNote
             if (style.Success)
             {
                 string q = style.Groups[1].Value;
-                string merged = "style=" + q + style.Groups[2].Value + ";" + TapeSpanStyle + q;
+                string merged = "style=" + q + style.Groups[2].Value + ";" + activeTapeStyle + q;
                 return tag.Replace(style.Value, merged);
             }
-            return "<a" + attrs + " style='" + TapeSpanStyle + "'>";
+            return "<a" + attrs + " style='" + activeTapeStyle + "'>";
         }
 
         /// <summary>
@@ -676,6 +688,27 @@ namespace RecallTape.OneNote
             }
             catch (Exception ex) { Log("TogglePeek FAILED: " + ex.Message); }
             finally { Release(app); }
+        }
+
+        /// <summary>
+        /// Apply one named tape recipe from the developer menu, then put the normal one back.
+        ///
+        /// The recipe travels in the ribbon control's `tag`, so adding a variant to compare is one
+        /// line of XML and no code at all.
+        /// </summary>
+        public void TapeVariant(IRibbonControl control)
+        {
+            string recipe = control == null ? null : control.Tag;
+            if (string.IsNullOrEmpty(recipe)) { Log("TapeVariant: no recipe on the control"); return; }
+
+            string previous = activeTapeStyle;
+            try
+            {
+                activeTapeStyle = recipe;
+                Log("TapeVariant: applying [" + recipe + "]");
+                TapeSelection(control);
+            }
+            finally { activeTapeStyle = previous; }
         }
 
         // ---- Remove tape --------------------------------------------------------------------

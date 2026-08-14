@@ -156,6 +156,28 @@ namespace RecallTape.OneNote
                   imageMso='FileSaveAsCurrentFileFormat' onAction='DumpPage'/>
           <button id='rtSurvey' label='Survey Notebooks' size='large'
                   imageMso='FindDialog' onAction='SurveyNotebooks'/>
+          <menu id='rtLab' label='Tape Lab' size='large' imageMso='ShapeFillColorPicker'
+                screentip='Apply one tape recipe, to compare them on a real page'
+                supertip='Each writes a different style. Remove Selected Tape and Remove All still work on any of them.'>
+            <button id='rtLabA' label='A - black bar, near-black text  (current)'
+                    tag='color:#0A0A0A;background:black;mso-highlight:black' onAction='TapeVariant'/>
+            <button id='rtLabB' label='B - black bar, no colour set'
+                    tag='background:black;mso-highlight:black' onAction='TapeVariant'/>
+            <button id='rtLabC' label='C - pure #000000 throughout'
+                    tag='color:#000000;background:#000000;mso-highlight:#000000' onAction='TapeVariant'/>
+            <button id='rtLabD' label='D - theme default #1F1F1E'
+                    tag='color:#1F1F1E;background:#1F1F1E;mso-highlight:#1F1F1E' onAction='TapeVariant'/>
+            <menuSeparator id='rtLabSep1' title='Light recipes'/>
+            <button id='rtLabE' label='E - white on white'
+                    tag='color:white;background:white;mso-highlight:white' onAction='TapeVariant'/>
+            <button id='rtLabF' label='F - white bar, #FEFEFE text'
+                    tag='color:#FEFEFE;background:white;mso-highlight:white' onAction='TapeVariant'/>
+            <menuSeparator id='rtLabSep2' title='Other'/>
+            <button id='rtLabG' label='G - grey on grey #808080'
+                    tag='color:#808080;background:#808080;mso-highlight:#808080' onAction='TapeVariant'/>
+            <button id='rtLabH' label='H - highlight only, no background'
+                    tag='mso-highlight:black' onAction='TapeVariant'/>
+          </menu>
           <gallery id='rtIcons' label='Icon Browser' size='large' imageMso='PictureStylesGallery'
                    columns='8' onAction='PickIcon'
                    screentip='Browse Office icons, rendered by OneNote itself'
