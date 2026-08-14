@@ -17,8 +17,8 @@ You get a **RecallTape** tab in the OneNote ribbon with three buttons:
 | **Remove Selected Tape** | Removes just the tape you're pointing at. |
 | **Remove All Tape** | Removes every tape on the page. Counts them, asks first, defaults to *No*. |
 
-And one gesture that isn't a button: **Ctrl+click a tape to peek under it.** Ctrl+click again to
-cover it back up.
+And one thing that isn't a button: **peeking**. How you peek depends on which kind of tape it is —
+see [Peeking](#peeking), because the two kinds genuinely behave differently.
 
 Not installed yet? See [Install](README.md#install) in the README. It takes about a minute.
 
@@ -60,14 +60,39 @@ This is the one to reach for when nothing else works.
 
 ## Peeking
 
-**Ctrl+click any tape.** Ctrl+click is OneNote's own convention for following a link, and that's
-literally what's happening under the hood.
+There are two kinds of tape and **they peek differently.** This is the one place RecallTape isn't
+uniform yet, so it's worth thirty seconds of your attention.
 
-The content appears. The tape doesn't vanish though — it leaves a **grey outline** exactly where it
-was. That's deliberate: with twenty tapes on a page, an invisible peeked tape is a tape you'll never
-find again. The outline says *"something lives here, and it's currently showing."*
+### Tape boxes — Ctrl+click
 
-**Ctrl+click the outline** to cover it back up.
+Anything covered by a **box** — ink, images, page backgrounds, free boxes you dragged into place —
+is a real object with a link on it. **Ctrl+click it** and the content appears.
+
+The tape doesn't vanish; it leaves a **grey outline** exactly where it was. That's deliberate: with
+twenty tapes on a page, an invisible peeked tape is one you'll never find again. The outline says
+*"something lives here, and it's showing right now."* **Ctrl+click the outline** to cover it back up.
+
+This reveal is **sticky**. It stays revealed until you put it back, including after you navigate
+away and return.
+
+### Taped text — select it
+
+Taped **text** is not an object, it's your own words coloured black on black. There's nothing to
+click, and Ctrl+click does nothing at all.
+
+Instead, **drag-select across it** — the selection highlight sits behind the letters and makes them
+legible. Or press **Ctrl+A** to select everything and reveal every taped run on the page at once.
+
+This reveal is **momentary**. Click anywhere else and it hides itself again, with nothing to put
+back and no state left behind.
+
+### Which is better?
+
+Honestly, the momentary one — for studying. Select to check yourself, click away, and the page is
+already reset for the next pass. Boxes make you undo the reveal by hand.
+
+They should be the same gesture, and making taped text clickable is on the list. Until then this is
+the real behaviour rather than the behaviour we'd like to describe.
 
 ---
 
@@ -133,8 +158,8 @@ The workflow it's built for:
 1. Tape the answers on a page — labels, definitions, drug names, the right-hand column of a table
 2. Come back later and read the page
 3. Try to recall what's under each bar **before** you peek
-4. Ctrl+click to check
-5. Ctrl+click again to re-cover, so the page is ready for the next pass
+4. Reveal to check yourself — Ctrl+click a box, or drag-select over taped text
+5. Put boxes back with another Ctrl+click; taped text re-hides on its own when you click away
 
 The re-cover step is what makes it repeatable. A page stays useful for weeks.
 
@@ -185,8 +210,9 @@ It isn't code-signed yet. *More info* → *Run anyway*. That's a real gap, hones
 is on the list.
 
 **A tape won't come off.**
-Ctrl+click it first to confirm it's ours — if content appears, it's RecallTape's. If nothing happens,
-it may be ordinary OneNote highlighting, which we deliberately leave alone.
+If it's a box, Ctrl+click it — if content appears, it's ours. If it's text, drag-select it: our tape
+hides text that is still perfectly selectable and copyable. If neither does anything, it may be
+ordinary OneNote highlighting, which we deliberately leave alone.
 
 **A Copilot icon keeps appearing when you click.**
 That's Microsoft's, not ours, and it shows up on every OneNote page whether RecallTape is installed

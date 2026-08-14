@@ -95,7 +95,8 @@ You'll find a **RecallTape** tab in the ribbon.
 ### 📖 [How to use it →](HOW-TO.md)
 
 Three buttons and one gesture. Covers taping text, ink and unselectable page backgrounds,
-peeking, removing, and what to do when something misbehaves.
+peeking (which differs between boxes and text), removing, and what to do when something
+misbehaves.
 
 Administrator is needed once — to copy into Program Files and register a COM class machine-wide.
 There is no per-user install: the DCOM permissions that make RecallTape work on ARM64 are machine
