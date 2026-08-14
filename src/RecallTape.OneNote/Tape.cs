@@ -88,6 +88,10 @@ namespace RecallTape.OneNote
             "color:" + TapeInk + ";background:" + TapeInk + ";mso-highlight:" + TapeInk;
 
         /// <summary>A span is ours if background and mso-highlight are both a dark colour.</summary>
+        /// <summary>An opening span tag, for the tag walker in StripTape.</summary>
+        private static readonly Regex SpanOpenRx =
+            new Regex(@"^<span([^>]*)>$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
         private static readonly Regex TapeSpanRx = new Regex(
             @"<span([^>]*)>(.*?)</span>",
             RegexOptions.Singleline | RegexOptions.IgnoreCase | RegexOptions.Compiled);
@@ -114,13 +118,54 @@ namespace RecallTape.OneNote
             return false;
         }
 
-        /// <summary>Unwrap our spans, leaving anyone else's alone.</summary>
+        /// <summary>
+        /// Unwrap our spans, leaving anyone else's exactly as they were.
+        ///
+        /// Walks the tags with a stack rather than matching a regex, and that is not fussiness.
+        /// `&lt;span([^&gt;]*)&gt;(.*?)&lt;/span&gt;` pairs an opening tag with the FIRST closing tag it
+        /// finds, which for nested spans is the wrong one - so an author's coloured span would be
+        /// tested for our style, judged innocent, and left whole with our tape still inside it. The
+        /// tape would simply not come off, on exactly the runs this change exists to handle.
+        ///
+        /// Caught by round-tripping real page content before shipping, not by reading the code.
+        /// </summary>
         private static string StripTape(string cdata)
         {
-            return TapeSpanRx.Replace(cdata, delegate(Match m)
+            var sb = new System.Text.StringBuilder();
+            var ours = new System.Collections.Generic.Stack<bool>();
+            int i = 0;
+
+            while (i < cdata.Length)
             {
-                return IsTapeStyle(m.Groups[1].Value) ? m.Groups[2].Value : m.Value;
-            });
+                int lt = cdata.IndexOf('<', i);
+                if (lt < 0) { sb.Append(cdata, i, cdata.Length - i); break; }
+                sb.Append(cdata, i, lt - i);
+
+                int gt = cdata.IndexOf('>', lt);
+                if (gt < 0) { sb.Append(cdata, lt, cdata.Length - lt); break; }
+
+                string tag = cdata.Substring(lt, gt - lt + 1);
+                Match open = SpanOpenRx.Match(tag);
+
+                if (open.Success)
+                {
+                    bool drop = IsTapeStyle(open.Groups[1].Value);
+                    ours.Push(drop);
+                    if (!drop) sb.Append(tag);
+                }
+                else if (tag.StartsWith("</span", StringComparison.OrdinalIgnoreCase))
+                {
+                    bool drop = ours.Count > 0 && ours.Pop();
+                    if (!drop) sb.Append(tag);
+                }
+                else
+                {
+                    sb.Append(tag);     // <br />, anything else - untouched
+                }
+
+                i = gt + 1;
+            }
+            return sb.ToString();
         }
 
         // ---- Tape ---------------------------------------------------------------------------
@@ -140,8 +185,19 @@ namespace RecallTape.OneNote
                 doc.LoadXml(xml);
                 var ns = doc.DocumentElement.NamespaceURI;
 
-                int runs = TapeTextRuns(doc);
+                // Selecting a whole text box selects the container AND everything in it, so we
+                // used to lay a box over it and separately tape every run inside - two tapes for
+                // one gesture, and removing the box left black text behind it.
+                //
+                // The rule that matches what people mean: a whole container selected is "cover this
+                // box". Text selected inside one is "cover these words". OneNote marks the Outline
+                // itself selected='all' only in the first case, which is exactly the signal we need.
+                bool wholeContainer =
+                    doc.SelectSingleNode("//*[local-name()='Outline'][@selected='all']") != null;
+
+                int runs = wholeContainer ? 0 : TapeTextRuns(doc);
                 int boxes = TapePositioned(doc, ns);
+                if (wholeContainer) Log("TapeSelection: whole container selected - covering the box, not its contents");
 
                 string freeId = null;
                 if (runs == 0 && boxes == 0)
@@ -192,10 +248,60 @@ namespace RecallTape.OneNote
                 if (string.IsNullOrEmpty(content)) continue;
                 if (HasTape(content)) continue;
 
-                SetCData(doc, t, "<span style='" + TapeSpanStyle + "'>" + content + "</span>");
+                SetCData(doc, t, WrapInnermost(content));
                 n++;
             }
             return n;
+        }
+
+        /// <summary>
+        /// Put the tape span around the TEXT, inside whatever formatting is already there.
+        ///
+        /// Wrapping the whole run looked right and was wrong. OneNote does not nest spans - it
+        /// FLATTENS them into one run per stretch of formatting, and when both our wrapper and the
+        /// author's own span set a colour, the author's wins. Measured on a real page:
+        ///
+        ///   we wrote:  &lt;span color:black,background:black&gt;&lt;span color:#1E4E79&gt;processing.&lt;/span&gt;&lt;/span&gt;
+        ///   came back: &lt;span style='color:#1E4E79;background:black;mso-highlight:black'&gt;processing.&lt;/span&gt;
+        ///
+        /// Blue text on a black bar. Readable. The tape was doing nothing where it mattered most,
+        /// on exactly the sentences someone had bothered to colour - which in a study notebook are
+        /// the important ones.
+        ///
+        /// So we go innermost. CSS gives the inner declaration precedence, and OneNote's flattening
+        /// respects that - which is precisely what the failure proved. The author's span is left
+        /// untouched around ours, so removing the tape restores their colour exactly, with nothing
+        /// remembered and nothing to lose.
+        /// </summary>
+        private static string WrapInnermost(string cdata)
+        {
+            // The CDATA is a little HTML: text, with optional spans carrying character formatting.
+            // Wrap every TEXT segment and leave every tag alone. Text nodes are innermost by
+            // definition, so this needs no parser and no knowledge of how deep the nesting goes.
+            var sb = new System.Text.StringBuilder();
+            int i = 0;
+            while (i < cdata.Length)
+            {
+                int lt = cdata.IndexOf('<', i);
+                if (lt < 0)
+                {
+                    AppendTaped(sb, cdata.Substring(i));
+                    break;
+                }
+                AppendTaped(sb, cdata.Substring(i, lt - i));
+
+                int gt = cdata.IndexOf('>', lt);
+                if (gt < 0) { sb.Append(cdata.Substring(lt)); break; }   // malformed; pass it through
+                sb.Append(cdata, lt, gt - lt + 1);
+                i = gt + 1;
+            }
+            return sb.ToString();
+        }
+
+        private static void AppendTaped(System.Text.StringBuilder sb, string text)
+        {
+            if (text.Length == 0) return;
+            sb.Append("<span style='").Append(TapeSpanStyle).Append("'>").Append(text).Append("</span>");
         }
 
         /// <summary>Overlay one clickable box covering the selected positioned elements (ink, images).</summary>
