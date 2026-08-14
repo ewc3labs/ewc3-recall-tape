@@ -61,6 +61,89 @@ if (-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administra
 }
 
 
+# Defined before the upgrade check, which compares against it. When this sat lower down, the
+# check ran with $target still empty and reported the install folder as an orphan to delete.
+$target = Join-Path $env:ProgramFiles 'EWC3 Labs\RecallTape'
+
+# --- is this an upgrade, and is OneNote in the way? --------------------------------------
+# Both matter to a non-developer and neither is obvious. Same CLSID means an upgrade
+# OVERWRITES cleanly rather than stacking, but the old folder is left behind doing nothing, and
+# a running OneNote keeps the OLD dll loaded in its surrogate until it is restarted - so the
+# install can report success while the user still has yesterday's build in front of them.
+$previous = $null
+try {
+    $cb = (Get-ItemProperty "HKLM:\SOFTWARE\Classes\CLSID\$Clsid\InprocServer32" -ErrorAction SilentlyContinue).CodeBase
+    if ($cb) {
+        $old = Split-Path -Parent ([Uri]$cb).LocalPath
+        if ($old -and $old -ne $target) { $previous = $old }
+    }
+} catch { }
+
+$oneNoteRunning = [bool](Get-Process ONENOTE -ErrorAction SilentlyContinue)
+
+if ($previous) {
+    Write-Host ""
+    Write-Host "  Replacing a previous install at:" -ForegroundColor Cyan
+    Write-Host "    $previous"
+    Write-Host "  That folder is no longer used and can be deleted once this finishes."
+}
+Write-Host ""
+
+# --- offer to close OneNote, rather than lecturing about it ---------------------------------
+# A running OneNote keeps the OLD dll loaded in its surrogate, so the install can report success
+# while the user is still looking at the previous version. Telling them that and walking away puts
+# the fiddly part - which is genuinely fiddly, OneNote lingers after its window closes - onto the
+# person least equipped to do it.
+#
+# So ask, and do it properly if they say yes: request a close, WAIT for the process to actually go,
+# and only force after a real timeout. Never start a second instance. Saying no is fine and just
+# leaves the warning at the end.
+if ($oneNoteRunning) {
+    Write-Host ""
+    Write-Host "  OneNote is running." -ForegroundColor Yellow
+    Write-Host "  It has to be closed and reopened before the new version loads."
+    Write-Host ""
+    $answer = Read-Host "  Close OneNote now? [Y/n]"
+
+    if ($answer -notmatch '^\s*n') {
+        $procs = @(Get-Process ONENOTE -ErrorAction SilentlyContinue)
+        Write-Host "  asking OneNote to close..."
+        $procs | ForEach-Object { $_.CloseMainWindow() | Out-Null }
+
+        $deadline = (Get-Date).AddSeconds(60)
+        while ((Get-Date) -lt $deadline -and (Get-Process ONENOTE -ErrorAction SilentlyContinue)) {
+            Start-Sleep -Milliseconds 500
+        }
+
+        $left = @(Get-Process ONENOTE -ErrorAction SilentlyContinue)
+        if ($left) {
+            Write-Host "  OneNote did not close on its own. Ending it." -ForegroundColor Yellow
+            $left | ForEach-Object { Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue }
+            Start-Sleep -Seconds 2
+        }
+
+        if (Get-Process ONENOTE -ErrorAction SilentlyContinue) {
+            Write-Host "  OneNote is still running. Close it by hand and run this again." -ForegroundColor Red
+            exit 1
+        }
+        Write-Host "  OneNote closed."
+        $oneNoteRunning = $false
+    }
+
+    # Closing OneNote is not enough. The add-in runs in a dllhost SURROGATE, which can outlive
+    # OneNote - and while it does, it holds the installed DLL open and the copy below fails with
+    # "being used by another process" AFTER the user has already closed everything they can see.
+    # Measured: an orphaned surrogate sat holding a dialog with OneNote long gone.
+    Get-CimInstance Win32_Process -Filter "Name='dllhost.exe'" -ErrorAction SilentlyContinue |
+        Where-Object { $_.CommandLine -match $Clsid.Trim('{', '}') } |
+        ForEach-Object {
+            Write-Host "  releasing RecallTape's background process (pid $($_.ProcessId))"
+            Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue
+        }
+    Start-Sleep -Milliseconds 500
+    Write-Host ""
+}
+
 # --- where RecallTape actually lives --------------------------------------------------------
 # NOT wherever the zip was extracted. That made the extracted folder load-bearing forever ("keep
 # this folder where it is"), and it let the add-in land somewhere weakly permissioned: a folder
@@ -74,7 +157,6 @@ if (-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administra
 # Per-machine is not really a choice here anyway. The DCOM AppID and LaunchPermission that make the
 # surrogate work on ARM64 are machine-wide config, so a per-user install could not carry them.
 # OneMore does not offer a per-user option either.
-$target = Join-Path $env:ProgramFiles 'EWC3 Labs\RecallTape'
 
 if ($here -ne $target) {
     Write-Host "Installing RecallTape to $target"
@@ -102,30 +184,6 @@ if (-not (Test-Path 'C:\Program Files\Microsoft Office\root\Office16\ONENOTE.EXE
     Write-Host "WARNING: OneNote desktop was not found where expected." -ForegroundColor Yellow
     Write-Host "         RecallTape needs OneNote for Windows desktop, not the Store app. Continuing anyway." -ForegroundColor Yellow
 }
-
-# --- is this an upgrade, and is OneNote in the way? --------------------------------------
-# Both matter to a non-developer and neither is obvious. Same CLSID means an upgrade
-# OVERWRITES cleanly rather than stacking, but the old folder is left behind doing nothing, and
-# a running OneNote keeps the OLD dll loaded in its surrogate until it is restarted - so the
-# install can report success while the user still has yesterday's build in front of them.
-$previous = $null
-try {
-    $cb = (Get-ItemProperty "HKLM:\SOFTWARE\Classes\CLSID\$Clsid\InprocServer32" -ErrorAction SilentlyContinue).CodeBase
-    if ($cb) {
-        $old = Split-Path -Parent ([Uri]$cb).LocalPath
-        if ($old -and $old -ne $target) { $previous = $old }
-    }
-} catch { }
-
-$oneNoteRunning = [bool](Get-Process ONENOTE -ErrorAction SilentlyContinue)
-
-if ($previous) {
-    Write-Host ""
-    Write-Host "  Replacing a previous install at:" -ForegroundColor Cyan
-    Write-Host "    $previous"
-    Write-Host "  That folder is no longer used and can be deleted once this finishes."
-}
-Write-Host ""
 
 # --- 1. the COM class ----------------------------------------------------------------------
 # 2>&1 because RegAsm writes its unsigned-assembly advisory to stderr, and "can cause your

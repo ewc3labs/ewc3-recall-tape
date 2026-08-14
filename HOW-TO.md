@@ -13,9 +13,9 @@ You get a **RecallTape** tab in the OneNote ribbon with three buttons:
 
 | Button | What it does |
 |---|---|
-| **Tape** | Covers whatever you selected. Selected nothing? You get a box you can drag anywhere. |
-| **Remove Tape** | Removes just the tape you're pointing at. |
-| **Remove All** | Removes every tape on the page. Counts them, asks first, defaults to *No*. |
+| **Apply Tape** | Covers whatever you selected. Selected nothing? You get a box you can drag anywhere. |
+| **Remove Selected Tape** | Removes just the tape you're pointing at. |
+| **Remove All Tape** | Removes every tape on the page. Counts them, asks first, defaults to *No*. |
 
 And one gesture that isn't a button: **Ctrl+click a tape to peek under it.** Ctrl+click again to
 cover it back up.
@@ -31,7 +31,7 @@ it picks based on what you gave it.
 
 ### Text
 
-Select the words you want hidden, press **Tape**. You get a black bar exactly as wide as what you
+Select the words you want hidden, press **Apply Tape**. You get a black bar exactly as wide as what you
 selected — not the whole line, not the whole paragraph. Select three words in the middle of a
 sentence and you'll cover three words.
 
@@ -41,7 +41,7 @@ on black.
 ### Ink, images, and diagrams
 
 Select them the normal OneNote way — lasso your ink, click an image, or drag a box around several
-things — then press **Tape**. You get **one** box covering the whole selection, not one box per item.
+things — then press **Apply Tape**. You get **one** box covering the whole selection, not one box per item.
 
 Handy for anatomy: lasso every label on a diagram at once and they vanish together.
 
@@ -50,8 +50,8 @@ Handy for anatomy: lasso every label on a diagram at once and they vanish togeth
 Lecture printouts, page backgrounds, PDF slides pasted as page images — OneNote won't let you select
 those at all. Some of them aren't really objects, they're the page's wallpaper.
 
-So: **select nothing and press Tape.** You get a free-floating box in the top-left. Drag it over
-whatever you want hidden, resize it from the corners. Press Tape again for another one, and each new
+So: **select nothing and press Apply Tape.** You get a free-floating box in the top-left. Drag it over
+whatever you want hidden, resize it from the corners. Press Apply Tape again for another one, and each new
 box appears slightly offset so they don't stack invisibly.
 
 This is the one to reach for when nothing else works.
@@ -75,7 +75,7 @@ find again. The outline says *"something lives here, and it's currently showing.
 
 ### Just the one
 
-**Put your cursor inside the taped text**, or **click a tape box**, then press **Remove Tape**.
+**Put your cursor inside the taped text**, or **click a tape box**, then press **Remove Selected Tape**.
 
 You don't have to select anything or highlight anything — just click into it. Which is the point,
 because selecting black text on a black background is a game nobody wants to play.
@@ -86,13 +86,45 @@ half a tape and leaving the other half sitting there.
 
 ### All of it
 
-**Remove All** clears the entire page. It tells you how many it found, asks you to confirm, and the
+**Remove All Tape** clears the entire page. It tells you how many it found, asks you to confirm, and the
 dialog defaults to **No** — you have to actively choose *Yes*.
 
 There's no undo that reaches back through a OneNote sync, so this one is meant to be slightly
 annoying.
 
 ---
+
+## Settings
+
+The **Settings** button on the left of the tab opens a small menu. Nothing in here is required
+reading — the defaults are the right ones for studying.
+
+### Show developer tools
+
+Off by default. Turning it on adds a **Developer** group with:
+
+- **Dump Page XML** — writes the current page's raw XML to the log folder. If you report a bug, this
+  is the single most useful thing you can attach. **Read it first**: page XML can contain your file
+  paths, your name, and the full text of anything on the page, including OCR'd text from images.
+- **Survey Notebooks** — counts what kinds of content your notebooks contain. Useful to us, slow on
+  a big notebook, and it does not change anything.
+- **Icon Browser** — shows Office icons drawn by OneNote itself. It exists because which icons work
+  varies per application, and this is the only reliable way to find out.
+
+### Logging
+
+RecallTape keeps a plain-text log of what each button did — no page content, ever, only actions and
+errors. It is the first thing to look at when something misbehaves.
+
+- **Write a log file** — on by default. Turn it off and nothing is written at all.
+- **Log size limit** — 1 MB, 5 MB or 20 MB. When the log passes the limit it rolls over: the current
+  file becomes `recalltape.log.1` and a fresh one starts. **Only one old file is kept**, so the most
+  RecallTape will ever use is twice the limit. At the 1 MB default that is 2 MB, forever, no matter
+  how long you use it.
+- **Open log folder** — opens `%LOCALAPPDATA%\EWC3 Labs\RecallTape` in File Explorer.
+
+Page dumps from **Dump Page XML** land in that same folder and are *not* rolled or deleted — they are
+written only when you ask, so cleaning them up is yours to do.
 
 ## Studying with it
 
@@ -126,7 +158,7 @@ Two more things that are true:
 - **Tape never deletes your content.** Text tape wraps words in black styling; box tape lays a
   picture on top. The original is underneath, intact, the whole time.
 - **Uninstalling doesn't strip your pages.** Tape stays as ordinary OneNote content. If you want a
-  page clean, run **Remove All** on it *before* you uninstall.
+  page clean, run **Remove All Tape** on it *before* you uninstall.
 
 ---
 

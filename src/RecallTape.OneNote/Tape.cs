@@ -871,6 +871,8 @@ namespace RecallTape.OneNote
         private const uint MB_ICONWARNING = 0x00000030;
         private const uint MB_ICONINFORMATION = 0x00000040;
         private const uint MB_DEFBUTTON2 = 0x00000100;   // default to No on a destructive question
+        private const uint MB_SETFOREGROUND = 0x00010000;
+        private const uint MB_TOPMOST = 0x00040000;
         private const int IDYES = 6;
 
         private static IntPtr OneNoteWindow(ON.Application app)

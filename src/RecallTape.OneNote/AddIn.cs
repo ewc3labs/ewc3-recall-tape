@@ -441,9 +441,38 @@ namespace RecallTape.OneNote
         public void About(IRibbonControl control)
         {
             var v = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
-            MessageBoxW(IntPtr.Zero, "RecallTape " + v + "\n\n"
-                + "Tape over your own notes and quiz yourself.\n\n"
-                + "github.com/ewc3labs/ewc3-recall-tape", "About RecallTape", MB_ICONINFORMATION);
+            Say("RecallTape " + v + "\n\n"
+              + "Tape over your own notes and quiz yourself.\n\n"
+              + "github.com/ewc3labs/ewc3-recall-tape", "About RecallTape");
+        }
+
+        /// <summary>
+        /// A message box that belongs to OneNote's window, not to nothing.
+        ///
+        /// Passing IntPtr.Zero as the owner produced a dialog owned by the SURROGATE, which has no
+        /// visible UI. It opened behind OneNote where it could not be seen or reached, OneNote beeped
+        /// at every click because a modal was up, and closing OneNote did not help - the surrogate
+        /// stayed alive holding the dialog, and therefore holding our DLL, so the next install failed
+        /// to copy over it. One unparented dialog, three symptoms, and the only way out was Task
+        /// Manager.
+        ///
+        /// So: owned by OneNote's real window where we can find it, and foreground+topmost as a
+        /// backstop so an ownerless one is at least visible rather than invisible and modal.
+        /// </summary>
+        private static void Say(string text, string caption)
+        {
+            IntPtr owner = IntPtr.Zero;
+            try
+            {
+                foreach (var p in System.Diagnostics.Process.GetProcessesByName("ONENOTE"))
+                {
+                    if (p.MainWindowHandle != IntPtr.Zero) { owner = p.MainWindowHandle; break; }
+                }
+            }
+            catch { }
+
+            MessageBoxW(owner, text, caption,
+                MB_ICONINFORMATION | MB_SETFOREGROUND | MB_TOPMOST);
         }
 
         // ---- Icon browser -------------------------------------------------------------------
@@ -489,7 +518,7 @@ namespace RecallTape.OneNote
             Log("icon picked: " + name);
             // No clipboard: that would pull System.Windows.Forms into the surrogate for one line,
             // and we kept it out on purpose. The id is short enough to read and type.
-            MessageBoxW(IntPtr.Zero, "imageMso id:\n\n    " + name, "Icon Browser", MB_ICONINFORMATION);
+            Say("imageMso id:\n\n    " + name, "Icon Browser");
         }
 
         // ---- Logging ------------------------------------------------------------------------
