@@ -41,11 +41,14 @@ namespace RecallTape.OneNote
         string Tag { get; }
     }
 
-    // NO IRibbonUI HERE, deliberately.
+    // No IRibbonUI here.
     //
-    // It was declared, with the correct IID read off this machine, and onLoad then never fired -
-    // silently. Office binds ribbon callbacks over IDispatch and drops the ones it cannot marshal
-    // without a word, so the add-in looked fine and the ribbon simply never handed itself over.
-    // AddIn.OnRibbonLoad takes an OBJECT and calls InvalidateControl by name instead. Do not
-    // "tidy that up" into a typed interface.
+    // One was declared, with the correct IID read off this machine, and onLoad did not fire - which
+    // looked like Office refusing to marshal it. That was a misreading. The ribbon XML had an
+    // undeclared attribute, so Office threw the whole customUI away and there was no ribbon at all;
+    // the interface was never the problem and never got a fair test.
+    //
+    // AddIn.OnRibbonLoad takes an OBJECT and calls InvalidateControl by name, which works and cannot
+    // be broken by a wrong guess about an interface we do not own. If you want to declare IRibbonUI
+    // properly some day it would probably work - just do not assume this comment says it failed.
 }

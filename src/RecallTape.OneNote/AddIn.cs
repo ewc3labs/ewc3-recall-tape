@@ -84,6 +84,20 @@ namespace RecallTape.OneNote
         public string GetCustomUI(string RibbonID)
         {
             Log("GetCustomUI ribbonID=" + RibbonID);
+
+            // Items are emitted as STATIC XML rather than fetched through getItemCount /
+            // getItemImage. The schema has no getItemImageMso: a dynamic gallery can only supply
+            // images as IPictureDisp, and there is no way to name an imageMso from a callback.
+            // <item> does take imageMso, and we build this string anyway, so static it is.
+            var icons = new StringBuilder();
+            for (int i = 0; i < IconIds.Length; i++)
+            {
+                icons.Append("<item id='ico").Append(i)
+                     .Append("' imageMso='").Append(IconIds[i])
+                     .Append("' label='").Append(IconIds[i])
+                     .Append("' screentip='").Append(IconIds[i]).Append("'/>");
+            }
+
             return @"<customUI xmlns='http://schemas.microsoft.com/office/2009/07/customui'
            onLoad='OnRibbonLoad'>
   <ribbon>
@@ -143,18 +157,17 @@ namespace RecallTape.OneNote
           <button id='rtSurvey' label='Survey Notebooks' size='large'
                   imageMso='FindDialog' onAction='SurveyNotebooks'/>
           <gallery id='rtIcons' label='Icon Browser' size='large' imageMso='PictureStylesGallery'
-                   columns='8' itemWidth='32' itemHeight='32'
-                   getItemCount='GetIconCount' getItemImageMso='GetIconImage'
-                   getItemLabel='GetIconLabel' getItemScreentip='GetIconLabel'
-                   onAction='PickIcon'
+                   columns='8' onAction='PickIcon'
                    screentip='Browse Office icons, rendered by OneNote itself'
-                   supertip='An icon that shows up blank does not exist in OneNote. Click one to see its id.'/>
+                   supertip='An icon that shows up blank does not exist in OneNote. Click one to see its id.'>
+            {ICONS}
+          </gallery>
         </group>
 
       </tab>
     </tabs>
   </ribbon>
-</customUI>";
+</customUI>".Replace("{ICONS}", icons.ToString());
         }
 
         // ---- The one command --------------------------------------------------------------
@@ -346,17 +359,19 @@ namespace RecallTape.OneNote
         // The ribbon is built once, at load. Anything that changes afterwards needs the IRibbonUI
         // handed to us here, so we can ask Office to re-query a control.
 
-        // Typed as OBJECT, and called by name. This is not laziness.
+        // Typed as OBJECT, and called by name.
         //
-        // Declared as a hand-rolled IRibbonUI, onLoad NEVER FIRED - no error, no log line, nothing.
-        // Office binds ribbon callbacks through IDispatch and silently drops any whose signature it
-        // cannot marshal, so a callback that is merely unbindable is indistinguishable from one that
-        // was never wired up. That is the same failure shape that cost an hour on IDTExtensibility2,
-        // and the same lesson: our declaration of an Office interface is a guess, and Office does not
-        // tell you when the guess is wrong.
+        // Honest history, because the first explanation written here was wrong. onLoad did not fire,
+        // and it looked exactly like Office silently refusing to marshal a hand-declared IRibbonUI -
+        // the same shape as the IDTExtensibility2 problem. It was not that. The gallery carried an
+        // attribute that does not exist in the schema, so Office rejected the ENTIRE customUI: no
+        // tab, no controls, and therefore no ribbon to hand back at load. Fix the attribute and
+        // onLoad fires on the first try, handing over a plain __ComObject.
         //
-        // object + InvokeMember goes through IDispatch by NAME, which is how the ribbon talks anyway.
-        // Nothing to get wrong, and it works with whatever Office actually hands us.
+        // So this is a defensive choice, not a proven necessity. InvokeMember goes through IDispatch
+        // by name, which is how the ribbon talks anyway, and it cannot be broken by a wrong guess
+        // about an interface we do not own. Keeping it. The real defence against the actual bug is
+        // tools/validate-ribbon.ps1.
         private object ribbon;
 
         public void OnRibbonLoad(object ribbonUI)
@@ -467,9 +482,6 @@ namespace RecallTape.OneNote
             "PictureInsertFromFile", "PictureStylesGallery", "GroupPictureStyles", "ShapeSmileyFace"
         };
 
-        public int GetIconCount(IRibbonControl control) { return IconIds.Length; }
-        public string GetIconImage(IRibbonControl control, int index) { return IconIds[index]; }
-        public string GetIconLabel(IRibbonControl control, int index) { return IconIds[index]; }
 
         public void PickIcon(IRibbonControl control, string selectedId, int selectedIndex)
         {
