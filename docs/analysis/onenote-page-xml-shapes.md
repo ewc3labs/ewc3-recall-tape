@@ -448,6 +448,41 @@ The exception, already shipped: selecting a whole container *does* have geometry
 carries a Position. That is exactly why "whole container selected" covers the box instead of its
 contents.
 
+## 10d. OneNote owns hyperlink text colour, absolutely
+
+Eight tape recipes were applied to eight hyperlinks and dumped in one page. The result is the
+cleanest negative we have:
+
+```
+A  color:#0A0A0A;background:black    ->  <span style='background:black;mso-highlight:black'>
+C  color:#000000;background:#000000  ->  <span style='background:black;mso-highlight:black'>
+D  color:#1F1F1E;background:#1F1F1E  ->  <span style='background:#1F1F1E'>
+E  color:white;background:white      ->  <span style='background:white'>
+G  color:#808080;background:#808080  ->  <span style='background:gray;mso-highlight:gray'>
+```
+
+**`color` is absent from all eight.** Not normalised, not merged, not lost to precedence — removed.
+Near-black, pure black, theme default, white, near-white and mid-grey were all discarded, while
+`background` and `mso-highlight` survived every time. Styling the anchor rather than a span inside it
+makes no difference: OneNote relocates the style into a span and strips the colour from that too.
+
+So hyperlink text colour is not ours to set. OneNote computes it for contrast against whatever
+background it finds, which is why a black bar renders white text and a white bar renders blue.
+
+**This kills `RT-42`, and `RT-44` for text with it.** The plan was to make taped text clickable by
+wrapping it in an anchor. But the moment text becomes a hyperlink, its colour stops being ours, and
+tape works by controlling colour. **Clickable and hidden are mutually exclusive for text.** No
+recipe can square that; the eight above are the proof rather than an argument.
+
+Two things follow:
+
+- **Taping text that is ALREADY a hyperlink is broken**, and cannot be fixed by styling. The only
+  route left is to remove the link while the tape is on and put it back when the tape comes off —
+  storing the `href` in a `one:Meta` on the paragraph, which the schema guarantees round-trips. The
+  link is unclickable while covered, which is no loss, since it is covered.
+- **Study Mode stays box-only.** Text keeps drag-select-to-reveal, which is momentary and
+  self-resetting and arguably the better study gesture anyway (§ Peeking in HOW-TO.md).
+
 ## 11. There is no viewport, so let OneNote do the hit-testing
 
 The obvious way to build a study mode is to capture mouse clicks, work out whether one landed on a
