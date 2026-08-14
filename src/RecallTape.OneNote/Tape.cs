@@ -574,7 +574,6 @@ namespace RecallTape.OneNote
 
                 var doc = new XmlDocument();
                 doc.LoadXml(xml);
-                DateTime expected = LastModified(doc);
 
                 // What counts as "the user picked this"?
                 //
@@ -640,6 +639,7 @@ namespace RecallTape.OneNote
 
                 // 2. Overlays: delete by objectID, so we remove the element we own and nothing else.
                 int boxes = 0;
+                int failed = 0;
                 foreach (XmlNode n in doc.SelectNodes("//*[local-name()='Image']"))
                 {
                     var alt = n.Attributes["alt"];
@@ -648,8 +648,19 @@ namespace RecallTape.OneNote
                     if (!alt.Value.StartsWith(TapePrefix, StringComparison.OrdinalIgnoreCase)) continue;
                     if (!inScope(n)) continue;
 
-                    app.DeletePageContent(pageId, oid.Value, expected, false);
-                    boxes++;
+                    // Fresh timestamp per delete: the previous delete moved it.
+                    try
+                    {
+                        app.DeletePageContent(pageId, oid.Value, CurrentTimestamp(app, pageId), false);
+                        boxes++;
+                    }
+                    catch (Exception ex)
+                    {
+                        // Report what we managed rather than abandoning the rest of the page. One
+                        // stubborn box should not strand the other nineteen.
+                        failed++;
+                        Log("  could not remove overlay " + oid.Value + ": " + ex.Message);
+                    }
                 }
 
                 string what = selectionOnly ? "RemoveTape" : "RemoveAllTape";
@@ -676,6 +687,7 @@ namespace RecallTape.OneNote
                 }
 
                 Log(what + ": restored " + runs + " text run(s), removed " + boxes + " overlay box(es)"
+                    + (failed > 0 ? "; " + failed + " overlay(s) FAILED" : "")
                     + (foreign > 0 ? "; left " + foreign + " run(s) alone - highlighted, but not RecallTape's" : ""));
             }
             catch (Exception ex) { Log("RemoveTape FAILED: " + ex.Message); }
@@ -835,6 +847,33 @@ namespace RecallTape.OneNote
         /// study-loop cadence against pages syncing from a Surface and a phone, and "never damage
         /// someone's notes" is non-negotiable #1 in PLAN.md.
         /// </summary>
+        /// <summary>
+        /// The page's CURRENT timestamp, re-read from OneNote.
+        ///
+        /// Every mutating call bumps lastModifiedTime - UpdatePageContent and each individual
+        /// DeletePageContent. We hand that timestamp back as a concurrency check with force:false, so
+        /// the SECOND write in any batch was always going to fail 0x80042010 against a value captured
+        /// up front.
+        ///
+        /// Remove All on a page holding both text tape and an overlay box did exactly that: the text
+        /// update landed, the first overlay delete threw, the catch aborted everything after it, and
+        /// the user had to press the button a second time to finish the job. It looked like the two
+        /// kinds of tape were fighting. They were not - the first write invalidated the second.
+        /// The count in the dialog was right because counting happens before any write.
+        ///
+        /// Re-reading before each write is the honest fix. Passing DateTime.MinValue with force:true
+        /// would also make the symptom go away, by disabling the check that stops us overwriting an
+        /// edit we never saw.
+        /// </summary>
+        private static DateTime CurrentTimestamp(ON.Application app, string pageId)
+        {
+            string xml;
+            app.GetPageContent(pageId, out xml, ON.PageInfo.piBasic, ON.XMLSchema.xs2013);
+            var fresh = new XmlDocument();
+            fresh.LoadXml(xml);
+            return LastModified(fresh);
+        }
+
         private static void UpdatePage(ON.Application app, XmlDocument doc)
         {
             app.UpdatePageContent(doc.OuterXml, LastModified(doc), ON.XMLSchema.xs2013, false);
