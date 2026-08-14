@@ -74,7 +74,7 @@ used it and it worked. `🟨` is not a lesser `💨`; it is an admission that we
 
 | ID | State | Slice | Est | Doc | Status |
 | --- | --- | --- | --- | --- | --- |
-| RT-42 | ⬜ planned | Hyperlink taped TEXT so clicking it works too | M | — | protocol already trusted; needs the anchor probe first |
+| RT-42 | ⬜ planned | Hyperlink taped TEXT so clicking it works too | M | — | PROVEN possible 2026-08-13 — OneNote keeps `<a href>` in CDATA |
 | RT-44 | ⬜ planned | Study Mode: click tape to reveal, click away to carry on | L | — | on hyperlinks, NOT a mouse hook — no viewport exists |
 | RT-15 | ⬜ planned | Hotkeys, so tape is not ribbon-only | M | — | `Ctrl+Alt+T`; needs a keyboard hook |
 | RT-16 | ⬜ planned | Study loop: reveal, retape, advance on one key | L | — | the whole point; needs RT-12 first |

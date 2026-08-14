@@ -396,6 +396,32 @@ Two properties bear on it, and only one is settled:
 **Consequence:** write as little as possible, as rarely as possible. That is also an argument against a
 study loop that persists reveal state on every interaction. That is `RT-32`.
 
+## 10b. A custom-protocol link survives inside a text run
+
+Tested rather than assumed, because it decides whether taped text can ever be clickable. A
+`recalltape://` hyperlink was applied to ordinary text by hand, and OneNote gave it straight back:
+
+```xml
+<one:T><![CDATA[<a
+href="recalltape://toggle/abc123">Review OPP Wk. 1 Orientation slides</a>]]></one:T>
+```
+
+Three things this settles:
+
+1. **Text hyperlinks live in the CDATA**, as an `<a href>` — the same place we already write our tape
+   span, so nothing new is needed to put one there.
+2. **A custom protocol is preserved.** Not stripped, not rewritten, not swapped for an internal
+   reference. OneNote does not police the scheme.
+3. `recalltape:` is already in Office's Trusted Protocols (the installer adds it), so following one
+   raises no warning.
+
+Note the newline OneNote inserted inside the tag — `<a
+href=...` — the same habit it has with
+`<span`. Anything parsing these must tolerate a line break between the tag name and its attributes.
+
+**So taped text can carry a link, and `RT-42` is buildable.** That makes clicking uniform across both
+kinds of tape, gives text click-to-peek for the first time, and is the foundation `RT-44` needs.
+
 ## 11. There is no viewport, so let OneNote do the hit-testing
 
 The obvious way to build a study mode is to capture mouse clicks, work out whether one landed on a
