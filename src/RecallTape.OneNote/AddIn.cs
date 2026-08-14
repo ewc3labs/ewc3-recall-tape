@@ -84,28 +84,73 @@ namespace RecallTape.OneNote
         public string GetCustomUI(string RibbonID)
         {
             Log("GetCustomUI ribbonID=" + RibbonID);
-            return @"<customUI xmlns='http://schemas.microsoft.com/office/2009/07/customui'>
+            return @"<customUI xmlns='http://schemas.microsoft.com/office/2009/07/customui'
+           onLoad='OnRibbonLoad'>
   <ribbon>
     <tabs>
       <tab id='rtTab' label='RecallTape'>
-        <group id='rtTape' label='Tape'>
-          <button id='rtTapeSel' label='Tape' size='large'
-                  imageMso='HighlightColorPicker' onAction='TapeSelection'/>
-          <button id='rtUntape' label='Remove Tape' size='large'
-                  imageMso='ClearFormatting' onAction='RemoveTape'
-                  screentip='Remove the selected tape'
-                  supertip='Click a tape strip, or click inside taped text, then press this.'/>
-          <button id='rtUntapeAll' label='Remove All' size='large'
-                  imageMso='DeleteAllComments' onAction='RemoveAllTape'
+
+        <!-- Layout is deliberate. The RecallTape tab sits at the FAR RIGHT of the tab strip, so
+             the pointer arrives at the right-hand end of the ribbon. Putting Tape - the button
+             pressed constantly - leftmost meant crossing the whole ribbon every single time.
+             So the order runs quietest-to-loudest, left to right, and Tape is both rightmost and
+             the only large button. Remove All is small and sits furthest from Tape, because it is
+             the one that can undo an evening. -->
+
+        <group id='rtSetup' label='Setup'>
+          <menu id='rtSettings' label='Settings' size='large' imageMso='AddInsMenu'
+                screentip='RecallTape settings'>
+            <checkBox id='rtDev' label='Show developer tools'
+                      getPressed='GetDevPressed' onAction='ToggleDev'
+                      screentip='Dump Page XML and Survey Notebooks'
+                      supertip='Diagnostics for reporting bugs. Off by default - they are no use while studying.'/>
+            <menuSeparator id='rtSepLog' title='Logging'/>
+            <checkBox id='rtLogOn' label='Write a log file'
+                      getPressed='GetLogPressed' onAction='ToggleLog'
+                      supertip='Records what each button did. No page content is ever written to it.'/>
+            <menu id='rtLogSize' label='Log size limit' imageMso='FileSave'>
+              <toggleButton id='rtLog1'  label='1 MB'   getPressed='GetLog1'  onAction='SetLog1'/>
+              <toggleButton id='rtLog5'  label='5 MB'   getPressed='GetLog5'  onAction='SetLog5'/>
+              <toggleButton id='rtLog20' label='20 MB'  getPressed='GetLog20' onAction='SetLog20'/>
+            </menu>
+            <button id='rtOpenLog' label='Open log folder' imageMso='Folder' onAction='OpenLogFolder'/>
+            <menuSeparator id='rtSepAbout'/>
+            <button id='rtAbout' label='About RecallTape' imageMso='Info' onAction='About'/>
+          </menu>
+        </group>
+
+        <group id='rtRemoveGrp' label='Remove'>
+          <button id='rtUntapeAll' label='Remove All'
+                  imageMso='InkDeleteAllInk' onAction='RemoveAllTape'
                   screentip='Remove every tape on this page'
                   supertip='Asks first. Clears the whole page, which can undo a lot of work.'/>
+          <button id='rtUntape' label='Remove Tape'
+                  imageMso='ClearFormatting' onAction='RemoveTape'
+                  screentip='Remove the tape you are pointing at'
+                  supertip='Put the cursor in taped text, or click a tape strip, then press this.'/>
         </group>
-        <group id='rtSpike' label='Spike'>
+
+        <group id='rtTapeGrp' label='Tape'>
+          <button id='rtTapeSel' label='Tape' size='large'
+                  imageMso='ShapeFillColorPicker' onAction='TapeSelection'
+                  screentip='Cover the selection'
+                  supertip='Select text, ink or an image. Select nothing and you get a box you can drag anywhere.'/>
+        </group>
+
+        <group id='rtSpike' label='Developer' getVisible='GetDevVisible'>
           <button id='rtDump' label='Dump Page XML' size='large'
                   imageMso='FileSaveAsCurrentFileFormat' onAction='DumpPage'/>
           <button id='rtSurvey' label='Survey Notebooks' size='large'
                   imageMso='FindDialog' onAction='SurveyNotebooks'/>
+          <gallery id='rtIcons' label='Icon Browser' size='large' imageMso='PictureStylesGallery'
+                   columns='8' itemWidth='32' itemHeight='32'
+                   getItemCount='GetIconCount' getItemImageMso='GetIconImage'
+                   getItemLabel='GetIconLabel' getItemScreentip='GetIconLabel'
+                   onAction='PickIcon'
+                   screentip='Browse Office icons, rendered by OneNote itself'
+                   supertip='An icon that shows up blank does not exist in OneNote. Click one to see its id.'/>
         </group>
+
       </tab>
     </tabs>
   </ribbon>
@@ -296,6 +341,145 @@ namespace RecallTape.OneNote
             File.WriteAllText(Path.Combine(LogDir, name), content, Encoding.UTF8);
         }
 
+        // ---- Ribbon state -------------------------------------------------------------------
+        //
+        // The ribbon is built once, at load. Anything that changes afterwards needs the IRibbonUI
+        // handed to us here, so we can ask Office to re-query a control.
+
+        // Typed as OBJECT, and called by name. This is not laziness.
+        //
+        // Declared as a hand-rolled IRibbonUI, onLoad NEVER FIRED - no error, no log line, nothing.
+        // Office binds ribbon callbacks through IDispatch and silently drops any whose signature it
+        // cannot marshal, so a callback that is merely unbindable is indistinguishable from one that
+        // was never wired up. That is the same failure shape that cost an hour on IDTExtensibility2,
+        // and the same lesson: our declaration of an Office interface is a guess, and Office does not
+        // tell you when the guess is wrong.
+        //
+        // object + InvokeMember goes through IDispatch by NAME, which is how the ribbon talks anyway.
+        // Nothing to get wrong, and it works with whatever Office actually hands us.
+        private object ribbon;
+
+        public void OnRibbonLoad(object ribbonUI)
+        {
+            ribbon = ribbonUI;
+            Log("ribbon loaded (" + (ribbonUI == null ? "null" : ribbonUI.GetType().Name)
+                + "); developer tools " + (Settings.DeveloperTools ? "ON" : "off"));
+        }
+
+        private void Refresh(string controlId)
+        {
+            if (ribbon == null) { Log("ribbon refresh skipped: onLoad never gave us a ribbon"); return; }
+            try
+            {
+                ribbon.GetType().InvokeMember("InvalidateControl",
+                    System.Reflection.BindingFlags.InvokeMethod, null, ribbon,
+                    new object[] { controlId });
+            }
+            catch (Exception ex) { Log("ribbon refresh failed: " + ex.Message); }
+        }
+
+        public bool GetDevVisible(IRibbonControl control) { return Settings.DeveloperTools; }
+        public bool GetDevPressed(IRibbonControl control) { return Settings.DeveloperTools; }
+
+        public void ToggleDev(IRibbonControl control, bool pressed)
+        {
+            Settings.DeveloperTools = pressed;
+            Log("developer tools " + (pressed ? "ON" : "off"));
+            Refresh("rtSpike");
+        }
+
+        public bool GetLogPressed(IRibbonControl control) { return Settings.Logging; }
+
+        public void ToggleLog(IRibbonControl control, bool pressed)
+        {
+            // Log the change BEFORE honouring it when switching off, so the file says why it stops.
+            if (!pressed) Log("logging turned OFF by user");
+            Settings.Logging = pressed;
+            if (pressed) Log("logging turned on");
+        }
+
+        public bool GetLog1(IRibbonControl control) { return Settings.LogMaxKB == 1024; }
+        public bool GetLog5(IRibbonControl control) { return Settings.LogMaxKB == 5120; }
+        public bool GetLog20(IRibbonControl control) { return Settings.LogMaxKB == 20480; }
+
+        public void SetLog1(IRibbonControl control, bool pressed) { SetLogSize(1024); }
+        public void SetLog5(IRibbonControl control, bool pressed) { SetLogSize(5120); }
+        public void SetLog20(IRibbonControl control, bool pressed) { SetLogSize(20480); }
+
+        private void SetLogSize(int kb)
+        {
+            Settings.LogMaxKB = kb;
+            Log("log size limit set to " + kb + " KB");
+            Refresh("rtLog1"); Refresh("rtLog5"); Refresh("rtLog20");
+        }
+
+        public void OpenLogFolder(IRibbonControl control)
+        {
+            try
+            {
+                Directory.CreateDirectory(LogDir);
+                System.Diagnostics.Process.Start("explorer.exe", "\"" + LogDir + "\"");
+            }
+            catch (Exception ex) { Log("OpenLogFolder failed: " + ex.Message); }
+        }
+
+        public void About(IRibbonControl control)
+        {
+            var v = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+            MessageBoxW(IntPtr.Zero, "RecallTape " + v + "\n\n"
+                + "Tape over your own notes and quiz yourself.\n\n"
+                + "github.com/ewc3labs/ewc3-recall-tape", "About RecallTape", MB_ICONINFORMATION);
+        }
+
+        // ---- Icon browser -------------------------------------------------------------------
+        //
+        // Which imageMso ids actually exist is per-application, not per-Office: HighlightColorPicker
+        // and DeleteAllComments are real ids that render nothing in OneNote, which is why two of our
+        // buttons shipped blank. No published list says which survive here.
+        //
+        // So let the host answer. OneNote draws these itself, and anything it cannot draw comes back
+        // blank - which is the answer. Developer tools only.
+        private static readonly string[] IconIds = new string[]
+        {
+            // covering / filling - candidates for Tape
+            "ShapeFillColorPicker", "ObjectPictureFill", "FillDown", "FillRight", "RecolorColorPicker",
+            "BlackAndWhiteInverseGrayscale", "WatermarkGallery", "PictureCrop", "PictureReset",
+            "GroupBorder", "ShapeRightArrow", "GroupShapes", "SnapToGrid", "PictureCompress",
+            "HighlightColorPicker", "TextHighlightColorPicker", "FontColorPicker", "Strikethrough",
+            // removing / clearing - candidates for Remove
+            "InkDeleteAllInk", "Clear", "FormFieldClear", "PivotTableClearMenu", "HyperlinkRemove",
+            "PageNumbersRemove", "RemoveDuplicates", "RemoveCitation", "SheetDelete",
+            "RecordsDeleteRecord", "DataFormDeleteRecord", "AdpOutputOperationsTableRemove",
+            "HeaderFooterRemoveHeaderWord", "DeleteAllComments", "CancelTaskAssignment",
+            // settings / tools
+            "AddInsMenu", "ReadingViewToolsMenu", "AutoCorrect", "Organizer", "ControlTitle",
+            "Info", "Help", "SearchUI", "FileFind", "Folder", "FileSave", "FileOpen",
+            "StylesDialogClassic", "StylesModifyStyle", "StylesStyleInspector", "ApplyStylesPane",
+            "SourceControlRefreshStatus", "FileCompactAndRepairDatabase", "SizeToGridOutlook",
+            // general - things that might read as tape, study or notes
+            "A", "Bullets", "Numbering", "ChangeCase", "Copy", "PasteAlternative", "TextBoxInsert",
+            "NewNote", "NewTask", "AcceptTask", "StarUnratedFull", "ReminderGallery", "StartTimer",
+            "CollapseAll", "OutlineExpandAll", "OutlineShowDetail", "OutlineDemote", "IndentDecrease",
+            "ReviewShowOrHideMarkup", "ReviewShowMarkupMenu", "CompareAndCombine", "WordCount",
+            "Spelling", "XmlSource", "CodeEdit", "ImagerScan", "BarcodeInsert", "CreateDiagram",
+            "PanAndZoomWindow", "PageNext", "PagePrevious", "UpArrow2", "DownArrow2", "SortUp",
+            "TableInsert", "ConvertTextToTable", "HorizontalLineInsert", "BookmarkInsert",
+            "PictureInsertFromFile", "PictureStylesGallery", "GroupPictureStyles", "ShapeSmileyFace"
+        };
+
+        public int GetIconCount(IRibbonControl control) { return IconIds.Length; }
+        public string GetIconImage(IRibbonControl control, int index) { return IconIds[index]; }
+        public string GetIconLabel(IRibbonControl control, int index) { return IconIds[index]; }
+
+        public void PickIcon(IRibbonControl control, string selectedId, int selectedIndex)
+        {
+            string name = IconIds[selectedIndex];
+            Log("icon picked: " + name);
+            // No clipboard: that would pull System.Windows.Forms into the surrogate for one line,
+            // and we kept it out on purpose. The id is short enough to read and type.
+            MessageBoxW(IntPtr.Zero, "imageMso id:\n\n    " + name, "Icon Browser", MB_ICONINFORMATION);
+        }
+
         // ---- Logging ------------------------------------------------------------------------
         //
         // A file log is not optional here: an add-in runs inside a host we do not control, and a
@@ -303,13 +487,45 @@ namespace RecallTape.OneNote
         // be visibly unknown.
         private static void Log(string message)
         {
+            if (!Settings.Logging) return;
             try
             {
                 Directory.CreateDirectory(LogDir);
-                File.AppendAllText(Path.Combine(LogDir, "recalltape.log"),
+                string path = Path.Combine(LogDir, "recalltape.log");
+                Roll(path);
+                File.AppendAllText(path,
                     DateTime.Now.ToString("HH:mm:ss.fff") + "| " + message + Environment.NewLine);
             }
             catch { /* logging must never take the host down */ }
+        }
+
+        /// <summary>
+        /// Keep the log bounded.
+        ///
+        /// We log every operation, and this add-in is meant to be used daily for a whole semester on
+        /// a machine whose owner never asked for our diagnostics. An unbounded log in someone's
+        /// profile is rude - more so now that it lives in LocalAppData rather than a temp folder
+        /// Windows would eventually empty for us.
+        ///
+        /// One previous file is kept, so the worst case is twice the limit and a user can still see
+        /// what happened before the roll. Deleting the older one silently is the point: nothing here
+        /// is worth keeping forever.
+        /// </summary>
+        private static void Roll(string path)
+        {
+            try
+            {
+                var fi = new FileInfo(path);
+                if (!fi.Exists || fi.Length < (long)Settings.LogMaxKB * 1024) return;
+
+                string previous = path + ".1";
+                if (File.Exists(previous)) File.Delete(previous);
+                File.Move(path, previous);
+                File.AppendAllText(path, DateTime.Now.ToString("HH:mm:ss.fff")
+                    + "| log rolled at " + fi.Length + " bytes; previous kept as recalltape.log.1"
+                    + Environment.NewLine);
+            }
+            catch { }
         }
     }
 }

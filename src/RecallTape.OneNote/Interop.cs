@@ -41,5 +41,11 @@ namespace RecallTape.OneNote
         string Tag { get; }
     }
 
-
+    // NO IRibbonUI HERE, deliberately.
+    //
+    // It was declared, with the correct IID read off this machine, and onLoad then never fired -
+    // silently. Office binds ribbon callbacks over IDispatch and drops the ones it cannot marshal
+    // without a word, so the add-in looked fine and the ribbon simply never handed itself over.
+    // AddIn.OnRibbonLoad takes an OBJECT and calls InvalidateControl by name instead. Do not
+    // "tidy that up" into a typed interface.
 }
