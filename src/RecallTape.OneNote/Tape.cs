@@ -78,6 +78,19 @@ namespace RecallTape.OneNote
         //   2. the SHAPE of the style - background and mso-highlight both set to the same dark colour
         // Rule 2 is what recognises tape applied by earlier builds, and it stays.
         private const string TapeInk = "black";
+
+        // The TEXT colour is deliberately NOT "black", and not the theme default either.
+        //
+        // OneNote discards a colour that equals the paragraph default - and #1F1F1E, the value we
+        // originally chose, IS this theme's default body colour, so "color:black" was being dropped
+        // from our span every time. Harmless on ordinary text, which is black anyway. Fatal on a
+        // HYPERLINK: with no explicit colour surviving, OneNote computes the link colour itself and
+        // flips it to white for contrast against our black background. Taped links came back
+        // perfectly readable in white, whichever order tape and link were applied in.
+        //
+        // #0A0A0A is not the default, so it should survive normalisation, and being innermost it
+        // should win. Visually identical to black against a black background.
+        private const string TapeTextInk = "#0A0A0A";
         private const string TapeMetaName = "RecallTape";
 
         /// <summary>
@@ -85,7 +98,7 @@ namespace RecallTape.OneNote
         /// when the text is already black -- coloured text stays perfectly readable on the bar.
         /// </summary>
         private const string TapeSpanStyle =
-            "color:" + TapeInk + ";background:" + TapeInk + ";mso-highlight:" + TapeInk;
+            "color:" + TapeTextInk + ";background:" + TapeInk + ";mso-highlight:" + TapeInk;
 
         /// <summary>A span is ours if background and mso-highlight are both a dark colour.</summary>
         /// <summary>An opening span tag, for the tag walker in StripTape.</summary>

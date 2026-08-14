@@ -422,6 +422,32 @@ href=...` — the same habit it has with
 **So taped text can carry a link, and `RT-42` is buildable.** That makes clicking uniform across both
 kinds of tape, gives text click-to-peek for the first time, and is the foundation `RT-44` needs.
 
+## 10c. Text has no geometry, so it cannot be covered by a box
+
+The tidiest fix for taped text would be to skip styling entirely: work out the rectangle the selected
+words occupy and drop our existing overlay box on top. One kind of tape, one gesture, no colour war.
+
+**The geometry does not exist.** Only `PageObject` types carry `one:Position` and `one:Size` —
+`Outline`, `Image`, `InkDrawing`, `Table`. Counted on a real page: 4 Outlines, 1 Image and 52
+InkDrawings all had a Position; **32 `one:OE` and 32 `one:T` had none**, and the schema does not
+define those attributes for them at all.
+
+So we know where a text *block* is and nothing finer. Covering a phrase would mean deriving its
+rectangle from font metrics, line wrapping, indentation and zoom, and the result would be wrong the
+moment the text reflowed — which is the normal state of a page someone is editing.
+
+Worth being precise about what selection gives us, because it looks like more than it is:
+`selected="all"` identifies **which run** the user picked, as a position in the tree. It never says
+**where** that run is on screen. Structure, never pixels — the same wall as §11.
+
+**Consequence:** taped text has to stay style-based. A box is not an option for a sub-range, and the
+only route to making taped text clickable is a hyperlink in its CDATA (`RT-42`), which is why the
+colour question there is load-bearing rather than cosmetic.
+
+The exception, already shipped: selecting a whole container *does* have geometry, because the Outline
+carries a Position. That is exactly why "whole container selected" covers the box instead of its
+contents.
+
 ## 11. There is no viewport, so let OneNote do the hit-testing
 
 The obvious way to build a study mode is to capture mouse clicks, work out whether one landed on a
