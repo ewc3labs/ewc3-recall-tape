@@ -66,6 +66,9 @@ jobs:
           Copy-Item "tools/Uninstall RecallTape.cmd" $stage
           Copy-Item "LICENSE"             $stage
           Copy-Item "CHANGELOG.md"        $stage
+          # HOW-TO ships IN the zip, not just on the repo page. Someone who has extracted a folder
+          # and is looking at a ribbon they do not recognise should not have to go back to GitHub.
+          Copy-Item "HOW-TO.md"           $stage
 
           # Fail loudly if a file we expect is missing, rather than shipping a zip that cannot install.
           $required = @(
@@ -73,7 +76,8 @@ jobs:
             'Microsoft.Office.Interop.OneNote.dll',
             'RecallTape.ProtocolHandler.exe',
             'install.ps1',
-            'Install RecallTape.cmd'
+            'Install RecallTape.cmd',
+            'HOW-TO.md'
           )
           foreach ($f in $required) {
             if (-not (Test-Path (Join-Path $stage $f))) { throw "Package is missing $f" }
