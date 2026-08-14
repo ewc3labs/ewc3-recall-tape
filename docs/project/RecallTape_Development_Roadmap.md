@@ -35,7 +35,7 @@ not a summary of them.
 
 | Series | Last Num | Series Description |
 | --- | --- | --- |
-| RT | RT-41 | RecallTape feature slices and fixes |
+| RT | RT-44 | RecallTape feature slices and fixes |
 
 `Last Num` is a cache over the Delivery Index, not a second source of truth — the IDs in the tables are
 authoritative. When minting, take the next number **and** confirm it is unused across every sub-table,
@@ -74,6 +74,8 @@ used it and it worked. `🟨` is not a lesser `💨`; it is an admission that we
 
 | ID | State | Slice | Est | Doc | Status |
 | --- | --- | --- | --- | --- | --- |
+| RT-42 | ⬜ planned | Hyperlink taped TEXT so clicking it works too | M | — | unlocks text peek AND uniform click; gates RT-44 |
+| RT-44 | ⬜ planned | Study Mode: click tape to reveal, click away to carry on | L | — | on hyperlinks, NOT a mouse hook — no viewport exists |
 | RT-15 | ⬜ planned | Hotkeys, so tape is not ribbon-only | M | — | `Ctrl+Alt+T`; needs a keyboard hook |
 | RT-16 | ⬜ planned | Study loop: reveal, retape, advance on one key | L | — | the whole point; needs RT-12 first |
 | RT-17 | ⬜ planned | Reveal All / Retape All | S | — | Retape All needs remembered tape state |
@@ -116,6 +118,7 @@ used it and it worked. `🟨` is not a lesser `💨`; it is an admission that we
 | RT-36 | 🟨 coded | Settings menu; developer tools off by default | M | — | ribbon menu, not a dialog; HKCU-backed |
 | RT-38 | 🟨 coded | Ribbon laid out for reach, with icons that render | S | — | Tape large and rightmost; icon browser found them |
 | RT-41 | ⬜ planned | Let users pick their own tape icon | S | — | the browser makes this small; whimsy belongs to them |
+| RT-43 | 💨 proven | Remove arms, then a click removes the tape | S | — | proven 2026-08-13 — reuses the peek plumbing |
 | RT-10 | ⬜ planned | Re-sequence PLAN.md phases to match real notes | S | — | flagged in PLAN.md, not yet done |
 
 ### Parked / Retired

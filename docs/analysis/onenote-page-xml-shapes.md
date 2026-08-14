@@ -396,6 +396,35 @@ Two properties bear on it, and only one is settled:
 **Consequence:** write as little as possible, as rarely as possible. That is also an argument against a
 study loop that persists reveal state on every interaction. That is `RT-32`.
 
+## 11. There is no viewport, so let OneNote do the hit-testing
+
+The obvious way to build a study mode is to capture mouse clicks, work out whether one landed on a
+piece of tape, toggle it if so and pass it through if not. **The first step of that is impossible.**
+
+Tape positions are page coordinates — `one:Position` gives `x` and `y` in points from the page origin.
+Turning those into screen coordinates needs the scroll offset and the zoom, and the API exposes
+neither. Checked across every type in the interop assembly: no `Scroll`, no `Zoom`, no `Viewport`, no
+`HitTest`, no cursor position. `Window` offers `WindowHandle`, four ids, `FullPageView`, `Active`,
+`DockedLocation` and `SideNote`. That is the whole surface.
+
+So a low-level mouse hook would deliver clicks we could not interpret. We would know a click happened
+at a screen point and have no way to decide whether tape was underneath it.
+
+**The hyperlink already solves this, and solves it better.** A tape overlay carries
+`hyperlink="recalltape://toggle/{guid}"`, so OneNote does the hit-testing — it knows exactly what was
+clicked, at any zoom, at any scroll position, including cases we could never compute like a tape half
+scrolled off screen or sitting inside a collapsed outline. The click arrives as a protocol activation
+carrying the id of the thing that was hit.
+
+And the pass-through requirement is satisfied by construction rather than by code: a click on anything
+that is not tape activates no link, so OneNote handles it normally. Nothing is intercepted, so nothing
+has to be re-dispatched, and there is no failure mode where we swallow a click and hand back nothing.
+
+The real gap is that only **overlay** tape carries a hyperlink. Taped text is a `span`, so a click on
+it reaches nobody. Giving taped runs a link is what makes clicking uniform, and it also gives text
+click-to-peek, which it has never had. That is the enabling slice — `RT-42` — and study mode sits on
+top of it rather than on a mouse hook.
+
 ## Open questions this raises
 
 - Does `objectID` survive a sync round-trip between two machines? That decides whether it is a durable
