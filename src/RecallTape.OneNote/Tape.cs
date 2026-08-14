@@ -105,6 +105,18 @@ namespace RecallTape.OneNote
         private static readonly Regex SpanOpenRx =
             new Regex(@"^<span([^>]*)>$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
+        /// <summary>An opening anchor tag. OneNote breaks the line after the tag name, so allow it.</summary>
+        private static readonly Regex AnchorOpenRx =
+            new Regex(@"^<a\b(.*)>$", RegexOptions.IgnoreCase | RegexOptions.Singleline | RegexOptions.Compiled);
+
+        private static readonly Regex StyleAttrRx =
+            new Regex(@"style\s*=\s*(['""])(.*?)\1",
+                      RegexOptions.IgnoreCase | RegexOptions.Singleline | RegexOptions.Compiled);
+
+        /// <summary>Our three properties, for taking back out of someone else's style attribute.</summary>
+        private static readonly Regex TapePropertyRx =
+            new Regex(@"^\s*(color|background|mso-highlight)\s*:", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
         private static readonly Regex TapeSpanRx = new Regex(
             @"<span([^>]*)>(.*?)</span>",
             RegexOptions.Singleline | RegexOptions.IgnoreCase | RegexOptions.Compiled);
@@ -128,6 +140,11 @@ namespace RecallTape.OneNote
             if (string.IsNullOrEmpty(cdata)) return false;
             foreach (Match m in TapeSpanRx.Matches(cdata))
                 if (IsTapeStyle(m.Groups[1].Value)) return true;
+
+            // A taped hyperlink carries the style on the anchor, with no span involved at all.
+            foreach (Match m in Regex.Matches(cdata, @"<a\b[^>]*>", RegexOptions.IgnoreCase))
+                if (IsTapeStyle(m.Value)) return true;
+
             return false;
         }
 
@@ -173,7 +190,9 @@ namespace RecallTape.OneNote
                 }
                 else
                 {
-                    sb.Append(tag);     // <br />, anything else - untouched
+                    Match anchor = AnchorOpenRx.Match(tag);
+                    if (anchor.Success) tag = RemoveTapeStyle(tag, anchor.Groups[1].Value);
+                    sb.Append(tag);     // <br />, anchors, anything else
                 }
 
                 i = gt + 1;
@@ -293,28 +312,89 @@ namespace RecallTape.OneNote
             // definition, so this needs no parser and no knowledge of how deep the nesting goes.
             var sb = new System.Text.StringBuilder();
             int i = 0;
+            int inAnchor = 0;
+
             while (i < cdata.Length)
             {
                 int lt = cdata.IndexOf('<', i);
                 if (lt < 0)
                 {
-                    AppendTaped(sb, cdata.Substring(i));
+                    AppendText(sb, cdata.Substring(i), inAnchor > 0);
                     break;
                 }
-                AppendTaped(sb, cdata.Substring(i, lt - i));
+                AppendText(sb, cdata.Substring(i, lt - i), inAnchor > 0);
 
                 int gt = cdata.IndexOf('>', lt);
                 if (gt < 0) { sb.Append(cdata.Substring(lt)); break; }   // malformed; pass it through
-                sb.Append(cdata, lt, gt - lt + 1);
+
+                string tag = cdata.Substring(lt, gt - lt + 1);
+                Match anchor = AnchorOpenRx.Match(tag);
+
+                if (anchor.Success)
+                {
+                    // A hyperlink styles ITSELF. A span inside one loses: OneNote computes the link
+                    // colour against our background and hands back white text on a black bar, which
+                    // is the most readable tape ever shipped. Put the style ON the anchor and there
+                    // is no inner/outer contest to lose.
+                    inAnchor++;
+                    tag = AddTapeStyle(tag, anchor.Groups[1].Value);
+                }
+                else if (tag.StartsWith("</a", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (inAnchor > 0) inAnchor--;
+                }
+
+                sb.Append(tag);
                 i = gt + 1;
             }
             return sb.ToString();
         }
 
-        private static void AppendTaped(System.Text.StringBuilder sb, string text)
+        private static void AppendText(System.Text.StringBuilder sb, string text, bool insideAnchor)
         {
             if (text.Length == 0) return;
+            if (insideAnchor) { sb.Append(text); return; }   // the anchor carries the style
             sb.Append("<span style='").Append(TapeSpanStyle).Append("'>").Append(text).Append("</span>");
+        }
+
+        /// <summary>Merge our properties into an anchor's style, keeping whatever was already there.</summary>
+        private static string AddTapeStyle(string tag, string attrs)
+        {
+            Match style = StyleAttrRx.Match(attrs);
+            if (style.Success)
+            {
+                string q = style.Groups[1].Value;
+                string merged = "style=" + q + style.Groups[2].Value + ";" + TapeSpanStyle + q;
+                return tag.Replace(style.Value, merged);
+            }
+            return "<a" + attrs + " style='" + TapeSpanStyle + "'>";
+        }
+
+        /// <summary>
+        /// Take our properties back out of an anchor's style, leaving the author's alone.
+        ///
+        /// We only ever ADD our three and REMOVE our three, so the original style needs no storing
+        /// anywhere - a font-weight or a font-family the user set survives untouched, because we
+        /// never rewrote it in the first place.
+        /// </summary>
+        private static string RemoveTapeStyle(string tag, string attrs)
+        {
+            Match style = StyleAttrRx.Match(attrs);
+            if (!style.Success || !IsTapeStyle(style.Groups[2].Value)) return tag;
+
+            var keep = new System.Collections.Generic.List<string>();
+            foreach (string part in style.Groups[2].Value.Split(';'))
+            {
+                if (part.Trim().Length == 0) continue;
+                if (TapePropertyRx.IsMatch(part)) continue;
+                keep.Add(part);
+            }
+
+            string q = style.Groups[1].Value;
+            string replacement = keep.Count > 0
+                ? "style=" + q + string.Join(";", keep.ToArray()) + q
+                : "";
+            return tag.Replace(style.Value, replacement).Replace("<a  ", "<a ").Replace(" >", ">");
         }
 
         /// <summary>Overlay one clickable box covering the selected positioned elements (ink, images).</summary>
