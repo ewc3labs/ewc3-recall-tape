@@ -45,6 +45,22 @@ things — then press **Apply Tape**. You get **one** box covering the whole sel
 
 Handy for anatomy: lasso every label on a diagram at once and they vanish together.
 
+### Hyperlinks — use a box
+
+**Taping a hyperlink as text does not work.** Not a bug we can fix: OneNote reserves the right to
+colour link text itself, and repaints it for contrast against whatever is behind it. Put a black bar
+under a link and OneNote helpfully draws the words in white on top of it. We tried eight different
+recipes; it wins every one.
+
+So don't fight it — **cover links with a box instead**:
+
+1. Click somewhere empty so nothing is selected
+2. Press **Apply Tape** — you get a free box
+3. Drag and resize it over the links
+
+One box can cover a whole list of them at once, and it Ctrl+clicks to peek like any other box. This
+is genuinely the better answer for a block of links, not a consolation prize.
+
 ### Anything you can't select
 
 Lecture printouts, page backgrounds, PDF slides pasted as page images — OneNote won't let you select
@@ -135,6 +151,9 @@ Off by default. Turning it on adds a **Developer** group with:
   a big notebook, and it does not change anything.
 - **Icon Browser** — shows Office icons drawn by OneNote itself. It exists because which icons work
   varies per application, and this is the only reliable way to find out.
+- **Tape Lab** — applies tape using one of eight different recipes, for comparing them on a real
+  page. This is how we established that hyperlinks are unwinnable. Everything it writes can still be
+  removed with the normal buttons.
 
 ### Logging
 
@@ -231,6 +250,9 @@ Being straight about the edges, so you don't waste time hunting for these:
 - **No keyboard shortcuts.** Ribbon buttons only, for now.
 - **Tape doesn't follow content.** Reflow a page and boxes stay where you put them. Anchoring tape to
   an object is designed but not built.
+- **Hyperlinks can't be text-taped.** OneNote controls link colour and repaints it for contrast, so
+  a taped link stays readable. Cover links with a box (above). This one is permanent — it is
+  OneNote's behaviour, not a gap in ours.
 - **No study statistics.** Nothing tracks what you peeked or how often.
 - **Boxes resize from corners only**, and OneNote keeps the aspect ratio. That's OneNote's image
   handling, not a setting we can reach. Workaround: make a new box at the shape you want.

@@ -76,7 +76,7 @@ used it and it worked. `🟨` is not a lesser `💨`; it is an admission that we
 | --- | --- | --- | --- | --- | --- |
 | RT-42 | ⏸ retired | Hyperlink taped TEXT so clicking it works too | M | — | IMPOSSIBLE 2026-08-13 — link text colour is not ours to set |
 | RT-44 | ⬜ planned | Study Mode: click tape to reveal, click away to carry on | L | — | BOXES ONLY — text cannot be clickable and hidden at once |
-| RT-45 | ⬜ planned | Tape text that is already a hyperlink | M | — | strip the href to a one:Meta, restore it on removal |
+| RT-45 | ⬜ planned | Tape text that is already a hyperlink | M | — | box workaround documented; only worth it if users ask |
 | RT-15 | ⬜ planned | Hotkeys, so tape is not ribbon-only | M | — | `Ctrl+Alt+T`; needs a keyboard hook |
 | RT-16 | ⬜ planned | Study loop: reveal, retape, advance on one key | L | — | the whole point; needs RT-12 first |
 | RT-17 | ⬜ planned | Reveal All / Retape All | S | — | Retape All needs remembered tape state |
