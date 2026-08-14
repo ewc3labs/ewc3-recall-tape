@@ -129,7 +129,7 @@ namespace RecallTape.OneNote
             </menu>
             <button id='rtOpenLog' label='Open log folder' imageMso='Folder' onAction='OpenLogFolder'/>
             <menuSeparator id='rtSepAbout'/>
-            <button id='rtAbout' label='About RecallTape' imageMso='Info' onAction='About'/>
+            <button id='rtAbout' label='About RecallTape' imageMso='ShapeSmileyFace' onAction='About'/>
           </menu>
         </group>
 
@@ -146,7 +146,7 @@ namespace RecallTape.OneNote
 
         <group id='rtTapeGrp' label='Tape'>
           <button id='rtTapeSel' label='Tape' size='large'
-                  imageMso='ShapeFillColorPicker' onAction='TapeSelection'
+                  imageMso='BlackAndWhiteInverseGrayscale' onAction='TapeSelection'
                   screentip='Cover the selection'
                   supertip='Select text, ink or an image. Select nothing and you get a box you can drag anywhere.'/>
         </group>

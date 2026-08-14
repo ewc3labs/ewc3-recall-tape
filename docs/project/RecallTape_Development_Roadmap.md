@@ -18,11 +18,15 @@ AsOf: 2026-08-13 (end of session)
 
 ## Current Focus
 
-1. `RT-07` — next, and small; it decides whether `RT-20` can anchor by objectID at all
-2. `RT-20` — then; anchor tapes to an object so they move when it does
-3. `RT-12` — a study loop cannot sit on writes that fail without retrying
-4. `RT-15` + `RT-16` — the actual product: a hotkey and a loop, not a ribbon button
-5. `RT-26` — before any issue reporter ships; page XML carries names, paths, whole lectures
+**Productization, then `v0.1.0`.** Creature features wait; the goal is software a stranger can
+install, use and uninstall without being told anything.
+
+1. `RT-36` `RT-37` `RT-38` — smoke the settings menu, log rolling and new ribbon on a real page
+2. `RT-21` + `RT-22` — signing and a real installer; the zip-and-script story is the weakest part left
+3. `RT-08` — progress feedback, so a long Survey does not look frozen
+4. Then bump to `v0.1.0` and go back to the product: `RT-15` + `RT-16`
+
+Parked until after 0.1.0, deliberately: `RT-07` → `RT-20` (anchoring), `RT-26` → `RT-25` (reporter).
 
 ## Last Numbers
 
@@ -31,7 +35,7 @@ not a summary of them.
 
 | Series | Last Num | Series Description |
 | --- | --- | --- |
-| RT | RT-32 | RecallTape feature slices and fixes |
+| RT | RT-41 | RecallTape feature slices and fixes |
 
 `Last Num` is a cache over the Delivery Index, not a second source of truth — the IDs in the tables are
 authoritative. When minting, take the next number **and** confirm it is unused across every sub-table,
@@ -40,6 +44,9 @@ then bump this cell in the same edit.
 ## Delivery Index
 
 **Rows are one line.** `Doc` pins a filename; anything wanting a paragraph wants a slice doc.
+
+States: `⬜ planned` · `🟨 coded` — built and deployed, nobody has used it yet · `💨 proven` — someone
+used it and it worked. `🟨` is not a lesser `💨`; it is an admission that we do not know yet.
 
 ### Proven
 
@@ -57,6 +64,11 @@ then bump this cell in the same edit.
 | RT-30 | 💨 proven | An installer a non-developer can actually run | M | — | proven 2026-08-13 — double-click .cmd |
 | RT-31 | 💨 proven | Guard every registry deletion | S | — | proven 2026-08-13 — refuses non-RecallTape keys |
 | RT-23 | 💨 proven | Verify the add-in loads on ARM64 | S | — | proven 2026-08-13 — Snapdragon X Elite |
+| RT-33 | 💨 proven | Identify tape by style shape, not a colour string | S | — | proven 2026-08-13 — OneNote rewrites our CSS |
+| RT-34 | 💨 proven | Remove tape from the caret, not only a selection | S | — | proven 2026-08-13 — caret is a zero-length T |
+| RT-35 | 💨 proven | Install per-machine into Program Files | M | — | proven 2026-08-13 — Users:(RX), nobody can swap the DLL |
+| RT-39 | 💨 proven | Validate ribbon XML against customui14.xsd | S | — | proven 2026-08-13 — caught the bug that deleted the tab |
+| RT-40 | 💨 proven | A how-to a student can follow without us | S | HOW-TO.md | shipped 2026-08-13 — linked twice, ships in the zip |
 
 ### The product — none of this exists yet
 
@@ -87,19 +99,23 @@ then bump this cell in the same edit.
 
 | ID | State | Slice | Est | Doc | Status |
 | --- | --- | --- | --- | --- | --- |
-| RT-12 | ⬜ planned | Re-read and retry on stale-timestamp writes | S | — | 0x80042010 seen live |
+| RT-12 | 💨 proven | Re-read the page timestamp before every write | S | — | proven 2026-08-13 — 5 tapes, one pass |
 | RT-32 | ⬜ planned | Survive taping a page that is in sync conflict | M | — | API cannot see conflict state at all |
 | RT-20 | ⬜ planned | Anchor tapes to an object, move them when it moves | M | — | blocked in practice by RT-07 |
 | RT-07 | ⬜ planned | Does objectID survive a sync round-trip | S | — | now testable — 2 machines share a notebook |
 
 | RT-08 | ⬜ planned | Progress feedback for long operations | S | — | Survey looks frozen on a big notebook |
+| RT-37 | 🟨 coded | Bounded logs: roll at a size, keep one previous | S | — | 1/5/20 MB, default 1; logging can be off |
 
 ### Shipping
 
 | ID | State | Slice | Est | Doc | Status |
 | --- | --- | --- | --- | --- | --- |
 | RT-21 | ⬜ planned | Code signing, so SmartScreen stops warning | M | — | needs a certificate; costs money |
-| RT-22 | ⬜ planned | MSI installer to replace zip + script | L | — | after RT-21; WiX builds headless |
+| RT-22 | ⬜ planned | MSI installer to replace zip + script | L | — | after RT-21; WiX headless, per-machine like OneMore |
+| RT-36 | 🟨 coded | Settings menu; developer tools off by default | M | — | ribbon menu, not a dialog; HKCU-backed |
+| RT-38 | 🟨 coded | Ribbon laid out for reach, with icons that render | S | — | Tape large and rightmost; icon browser found them |
+| RT-41 | ⬜ planned | Let users pick their own tape icon | S | — | the browser makes this small; whimsy belongs to them |
 | RT-10 | ⬜ planned | Re-sequence PLAN.md phases to match real notes | S | — | flagged in PLAN.md, not yet done |
 
 ### Parked / Retired
