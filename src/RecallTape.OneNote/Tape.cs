@@ -502,6 +502,55 @@ namespace RecallTape.OneNote
             }
         }
 
+        // ---- Point and click removal ---------------------------------------------------------
+        //
+        // Pressing Remove with nothing taped selected used to be a dead end: a dialog telling you to
+        // go and select something, then press the button again. Verb, then noun, then verb.
+        //
+        // Instead the button ARMS. The next tape you Ctrl+click is removed rather than peeked. No new
+        // plumbing at all - tape overlays are already hyperlinks, the click already reaches us through
+        // the protocol handler and the pipe, and all that changes is what the arriving command means.
+        //
+        // It expires. An armed state left lying around would turn an ordinary peek into a deletion
+        // several minutes later, which is precisely the kind of surprise a study tool must not have.
+        private static DateTime armedUntil = DateTime.MinValue;
+        private static readonly TimeSpan ArmedWindow = TimeSpan.FromSeconds(30);
+
+        private static bool IsArmed { get { return DateTime.Now < armedUntil; } }
+
+        /// <summary>Delete one overlay by our own id. Same lookup as TogglePeek, different verdict.</summary>
+        private void RemoveById(string id)
+        {
+            ON.Application app = null;
+            try
+            {
+                app = new ON.Application();
+                string pageId = app.Windows.CurrentWindow.CurrentPageId;
+
+                string xml;
+                app.GetPageContent(pageId, out xml, ON.PageInfo.piBasic, ON.XMLSchema.xs2013);
+
+                var doc = new XmlDocument();
+                doc.LoadXml(xml);
+
+                foreach (XmlNode n in doc.SelectNodes("//*[local-name()='Image']"))
+                {
+                    var alt = n.Attributes["alt"];
+                    var oid = n.Attributes["objectID"];
+                    if (alt == null || oid == null) continue;
+                    if (!alt.Value.EndsWith(":" + id, StringComparison.OrdinalIgnoreCase)) continue;
+
+                    app.DeletePageContent(pageId, oid.Value, CurrentTimestamp(app, pageId), false);
+                    Log("RemoveById: removed " + id);
+                    return;
+                }
+
+                Log("RemoveById: no tape with id " + id + " on the current page");
+            }
+            catch (Exception ex) { Log("RemoveById FAILED: " + ex.Message); }
+            finally { Release(app); }
+        }
+
         // ---- Peek ---------------------------------------------------------------------------
 
         /// <summary>
@@ -772,12 +821,26 @@ namespace RecallTape.OneNote
                 string what = selectionOnly ? "RemoveTape" : "RemoveAllTape";
                 if (selectionOnly && runs == 0 && boxes == 0)
                 {
-                    Log(what + ": nothing selected that is taped");
-                    Tell(app, "No tape here.\n\n"
-                            + "Put the cursor in taped text, or click a tape strip, then press "
-                            + "Remove Tape.\n\n"
-                            + "To clear the whole page, use Remove All.", "RecallTape");
+                    // Nothing taped was selected. Arm instead of scolding.
+                    if (IsArmed)
+                    {
+                        armedUntil = DateTime.MinValue;
+                        Log(what + ": disarmed by second press");
+                        Tell(app, "Cancelled. Nothing was removed.", "RecallTape");
+                        return;
+                    }
+
+                    armedUntil = DateTime.Now + ArmedWindow;
+                    Log(what + ": nothing selected that is taped - ARMED for "
+                        + (int)ArmedWindow.TotalSeconds + "s");
+                    Tell(app,
+                        "Ctrl+click the tape you want to remove.\n\n"
+                        + "You have " + (int)ArmedWindow.TotalSeconds + " seconds. Press Remove "
+                        + "Selected Tape again to cancel.\n\n"
+                        + "For taped TEXT, put the cursor in it and press the button instead.",
+                        "RecallTape");
                     return;
+
                 }
 
                 int foreign = 0;

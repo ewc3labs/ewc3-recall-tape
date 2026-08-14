@@ -86,7 +86,17 @@ namespace RecallTape.OneNote
             switch (verb)
             {
                 case "toggle":
-                    TogglePeek(id);
+                    // Same click, different meaning, decided by whether Remove armed us.
+                    if (IsArmed)
+                    {
+                        armedUntil = DateTime.MinValue;
+                        Log("command: armed - removing instead of peeking");
+                        RemoveById(id);
+                    }
+                    else
+                    {
+                        TogglePeek(id);
+                    }
                     break;
                 default:
                     Log("command: unknown verb " + verb);
