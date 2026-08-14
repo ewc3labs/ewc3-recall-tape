@@ -118,7 +118,7 @@ used it and it worked. `🟨` is not a lesser `💨`; it is an admission that we
 | RT-36 | 🟨 coded | Settings menu; developer tools off by default | M | — | ribbon menu, not a dialog; HKCU-backed |
 | RT-38 | 🟨 coded | Ribbon laid out for reach, with icons that render | S | — | Tape large and rightmost; icon browser found them |
 | RT-41 | ⬜ planned | Let users pick their own tape icon | S | — | the browser makes this small; whimsy belongs to them |
-| RT-43 | 💨 proven | Remove arms, then a click removes the tape | S | — | proven 2026-08-13 — reuses the peek plumbing |
+| RT-43 | ⏸ retired | Remove arms, then a click removes the tape | S | — | built, worked, backed out 2026-08-13 — its modal cost more than the no-op |
 | RT-10 | ⬜ planned | Re-sequence PLAN.md phases to match real notes | S | — | flagged in PLAN.md, not yet done |
 
 ### Parked / Retired

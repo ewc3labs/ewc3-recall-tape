@@ -141,7 +141,7 @@ namespace RecallTape.OneNote
           <button id='rtUntape' label='Remove Selected Tape'
                   imageMso='ClearFormatting' onAction='RemoveTape'
                   screentip='Remove the tape you are pointing at'
-                  supertip='Put the cursor in taped text, or click a tape strip, then press this.'/>
+                  supertip='Select the tape first: put the cursor in taped text, or click a tape box. With nothing selected this does nothing.'/>
         </group>
 
         <group id='rtTapeGrp' label='Tape'>
