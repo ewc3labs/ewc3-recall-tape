@@ -224,7 +224,7 @@ the installer has run you can delete it. The uninstaller lives in the installed 
 Use `Install RecallTape.cmd` — double-click it, and it asks for admin itself. You don't need to find
 a right-click option. It also handles PowerShell's execution-policy block for you.
 
-**Windows says the publisher is unrecognised.**
+**Windows says the publisher is unrecognized.**
 It isn't code-signed yet. *More info* → *Run anyway*. That's a real gap, honestly stated, and signing
 is on the list.
 

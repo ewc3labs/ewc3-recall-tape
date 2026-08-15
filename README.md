@@ -106,7 +106,7 @@ Program Files is deliberate rather than tidy: it is the one location a standard 
 so nobody can swap the DLL that OneNote loads. Logs and page dumps live under
 `%LOCALAPPDATA%\EWC3 Labs\RecallTape`, which is per-user and needs no privilege.
 
-> **Windows will warn you.** The download isn't code-signed yet, so SmartScreen flags it as unrecognised
+> **Windows will warn you.** The download isn't code-signed yet, so SmartScreen flags it as unrecognized
 > — click *More info* → *Run anyway*. That's a real warning about a real gap, not a formality; a signing
 > certificate is on the list before this is something we ask strangers to trust.
 
