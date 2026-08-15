@@ -54,7 +54,7 @@ it out. Masking it means acting on the content.
 **Positioned content** — ink and images — lives at **page level**, each with absolute
 `Position(x, y, z)` and `Size(width, height)`. Masking it means acting on coordinates.
 
-`docs/design/architecture.md` modelled `Tape.anchor` as one thing. **It is two.** A design that only
+`docs/design/architecture.md` modeled `Tape.anchor` as one thing. **It is two.** A design that only
 anchors into content cannot mask an image, and a design that only anchors to coordinates cannot follow
 reflowing text.
 
@@ -295,12 +295,12 @@ random failure rather than a round-trip one.
 theme. It was chosen as "deliberately not #1F1F1F, so the colour doubles as the removal marker". It
 was neither deliberate nor a marker; it was the default, and it did not survive.
 
-**The rule:** identity must not be a value OneNote is free to normalise. Identify by the *shape* of
+**The rule:** identity must not be a value OneNote is free to normalize. Identify by the *shape* of
 what survives, or by a schema element it must round-trip.
 
-Tape is now recognised by structure — a `span` whose style sets **both** `background` **and**
+Tape is now recognized by structure — a `span` whose style sets **both** `background` **and**
 `mso-highlight` to a dark colour, in any notation. Both, not either: a user's own highlight sets one.
-This still recognises tape from earlier builds, and it leaves yellow highlights, plain black text, and
+This still recognizes tape from earlier builds, and it leaves yellow highlights, plain black text, and
 highlight-only spans alone (all three verified against the captured page).
 
 For anything new, `one:Meta` is the honest mechanism: the schema allows it on `OE`, unbounded, and
@@ -461,8 +461,8 @@ E  color:white;background:white      ->  <span style='background:white'>
 G  color:#808080;background:#808080  ->  <span style='background:gray;mso-highlight:gray'>
 ```
 
-**`color` is absent from all eight.** Not normalised, not merged, not lost to precedence — removed.
-Near-black, pure black, theme default, white, near-white and mid-grey were all discarded, while
+**`color` is absent from all eight.** Not normalized, not merged, not lost to precedence — removed.
+Near-black, pure black, theme default, white, near-white and mid-gray were all discarded, while
 `background` and `mso-highlight` survived every time. Styling the anchor rather than a span inside it
 makes no difference: OneNote relocates the style into a span and strips the colour from that too.
 

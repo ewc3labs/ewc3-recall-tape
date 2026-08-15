@@ -13,7 +13,7 @@ Belongs here:
 
 - hard-won problem → solution narratives, especially non-obvious root causes
 - architectural reasoning, **including the options that were rejected and why**
-- discovered platform behaviour that contradicts the documentation
+- discovered platform behavior that contradicts the documentation
 - workarounds whose *reason* is invisible in the code
 - compressed session memory worth preserving in-repo
 

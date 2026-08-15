@@ -50,7 +50,7 @@ version is the superior study loop and it's also the achievable one.
 
 ## Architecture — keep the engine host-agnostic
 
-Sketched in the origin doc and worth honouring, because it's what turns "a janky OneNote hack" into a
+Sketched in the origin doc and worth honoring, because it's what turns "a janky OneNote hack" into a
 reusable engine:
 
 ```text

@@ -3,7 +3,7 @@
 **RecallTape is pre-alpha.** There is no installable build yet, so there's nothing to troubleshoot —
 but questions and ideas are welcome.
 
-- **Bug or unexpected behaviour** → [open an issue](https://github.com/ewc3labs/ewc3-recall-tape/issues)
+- **Bug or unexpected behavior** → [open an issue](https://github.com/ewc3labs/ewc3-recall-tape/issues)
 - **Feature idea** → also an issue; the templates will prompt for what's useful
 - **Wondering what this even is** → [README](README.md), then [`docs/origins.md`](docs/origins.md)
 - **Want to know when it's usable** → watch or star the repo

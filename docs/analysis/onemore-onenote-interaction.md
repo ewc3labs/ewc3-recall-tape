@@ -265,7 +265,7 @@ Directly relevant, because RecallTape's entire study loop is a hotkey.
   message pump; an add-in has neither by default, so it makes one.
 - User overrides come from settings, and defaults can be skipped per-locale. Their example: on non-US
   layouts `AltGr` *is* `Ctrl+Alt`, so a default `Ctrl+Alt+OemPlus` binding collides with typing a square
-  bracket. They skip the default on those locales but honour an explicit user binding regardless.
+  bracket. They skip the default on those locales but honor an explicit user binding regardless.
 
 That locale detail is a free lesson. RecallTape's headline binding is **`Ctrl+Alt+T`** — worth checking
 against non-US layouts *before* it ships in a README.
@@ -287,7 +287,7 @@ Stated explicitly, because an earlier version of this analysis over-claimed.
 
 **Verified later the same day.** OneMore's `ConvertMarkdownCommand` — which reads the page *and* writes
 it back — ran clean on this build. Our own add-in then read real page XML off 79 pages of a real
-notebook. `GetPageContent` works; `UpdatePageContent` is proven by OneMore's behaviour, and by our own
+notebook. `GetPageContent` works; `UpdatePageContent` is proven by OneMore's behavior, and by our own
 code once `RT-03` lands.
 
 That result is worth stating precisely, because it is counter-intuitive. **External automation is

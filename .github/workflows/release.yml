@@ -67,7 +67,7 @@ jobs:
           Copy-Item "LICENSE"             $stage
           Copy-Item "CHANGELOG.md"        $stage
           # HOW-TO ships IN the zip, not just on the repo page. Someone who has extracted a folder
-          # and is looking at a ribbon they do not recognise should not have to go back to GitHub.
+          # and is looking at a ribbon they do not recognize should not have to go back to GitHub.
           Copy-Item "HOW-TO.md"           $stage
 
           # Fail loudly if a file we expect is missing, rather than shipping a zip that cannot install.
@@ -166,7 +166,7 @@ jobs:
               anything — including page backgrounds and lecture printouts, which OneNote will not let
               you select
             - **Ctrl+click** a tape strip to peek under it; click again to cover it back up. A peeked
-              tape keeps a grey outline so you can find it again
+              tape keeps a gray outline so you can find it again
             - Selecting over taped text also reveals it
             - **Remove Tape** clears the one you have selected; **Remove All** clears the page, and asks first
 

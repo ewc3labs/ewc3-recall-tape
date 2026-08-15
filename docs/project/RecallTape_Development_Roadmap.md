@@ -127,10 +127,10 @@ used it and it worked. `🟨` is not a lesser `💨`; it is an admission that we
 | ID | State | Slice | Est | Doc | Status |
 | --- | --- | --- | --- | --- | --- |
 | RT-09 | ⏸️ deferred | The Assistant, as a click-through overlay window | XL | — | deferred — after the tool is good; name unresolved |
-| RT-29 | 🟥 cancelled | Free the corner handles from aspect ratio | S | — | not ours — no aspect property exists in the schema |
+| RT-29 | 🟥 canceled | Free the corner handles from aspect ratio | S | — | not ours — no aspect property exists in the schema |
 
 **States:** ⬜ `planned` · 🟦 `coded` · 💨 `proven` (actually run and observed) · 🟩 `shipped` ·
-🟧 `blocked` · ⏸️ `deferred` · 🟥 `cancelled`
+🟧 `blocked` · ⏸️ `deferred` · 🟥 `canceled`
 
 **Est:** `S` an hour or two · `M` a session · `L` several sessions · `XL` a project in itself.
 Day counts were fake precision — five slices landed in a single day while wearing "1d" and "3d"

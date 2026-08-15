@@ -62,7 +62,7 @@ not the problem.
 
 **The interface is present and correctly typed. The server answers metadata requests and fails every
 real call.** `GetSpecialLocation` merely returns a folder path — it touches no notebook, needs no sync,
-requires no sign-in — and it fails identically. That single data point kills every "not initialised
+requires no sign-in — and it fails identically. That single data point kills every "not initialized
 yet" explanation.
 
 ---
@@ -201,7 +201,7 @@ produces the identical pair and works.**
       OneMore's `ConvertMarkdownCommand` — a read *and* a write — ran clean on this build, and our own
       add-in then read real XML off 79 pages. The asymmetry is the finding: **`CoCreateInstance` returns
       a dead object to an external process and the identical call works from inside a OneNote-spawned
-      surrogate.** `UpdatePageContent` is still only proven by OneMore's behaviour, not our own code;
+      surrogate.** `UpdatePageContent` is still only proven by OneMore's behavior, not our own code;
       `RT-03` closes that.
 - [x] ~~Fix the spike bug: class constructed but `OnConnection` never called.~~ **Root cause:
       hand-declared COM interfaces do not satisfy Office's add-in contract.** Correct IID

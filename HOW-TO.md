@@ -84,7 +84,7 @@ uniform yet, so it's worth thirty seconds of your attention.
 Anything covered by a **box** — ink, images, page backgrounds, free boxes you dragged into place —
 is a real object with a link on it. **Ctrl+click it** and the content appears.
 
-The tape doesn't vanish; it leaves a **grey outline** exactly where it was. That's deliberate: with
+The tape doesn't vanish; it leaves a **gray outline** exactly where it was. That's deliberate: with
 twenty tapes on a page, an invisible peeked tape is one you'll never find again. The outline says
 *"something lives here, and it's showing right now."* **Ctrl+click the outline** to cover it back up.
 
@@ -108,7 +108,7 @@ Honestly, the momentary one — for studying. Select to check yourself, click aw
 already reset for the next pass. Boxes make you undo the reveal by hand.
 
 They should be the same gesture, and making taped text clickable is on the list. Until then this is
-the real behaviour rather than the behaviour we'd like to describe.
+the real behavior rather than the behavior we'd like to describe.
 
 ---
 
@@ -252,7 +252,7 @@ Being straight about the edges, so you don't waste time hunting for these:
   an object is designed but not built.
 - **Hyperlinks can't be text-taped.** OneNote controls link colour and repaints it for contrast, so
   a taped link stays readable. Cover links with a box (above). This one is permanent — it is
-  OneNote's behaviour, not a gap in ours.
+  OneNote's behavior, not a gap in ours.
 - **No study statistics.** Nothing tracks what you peeked or how often.
 - **Boxes resize from corners only**, and OneNote keeps the aspect ratio. That's OneNote's image
   handling, not a setting we can reach. Workaround: make a new box at the shape you want.

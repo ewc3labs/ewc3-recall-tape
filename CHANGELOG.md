@@ -18,7 +18,7 @@ one wrong assumption about a colour.
   colour `black`. Freshly applied tape matched and came off; the same tape after a save
   did not, so you selected a solid black bar and were told there was no tape there. Worse,
   `#1F1F1E` was never distinctive: it is OneNote's own default body colour and appears on
-  ordinary untaped paragraphs. Tape is now recognised by the *shape* of what survives — a
+  ordinary untaped paragraphs. Tape is now recognized by the *shape* of what survives — a
   span setting both `background` and `mso-highlight` dark — which also still finds tape
   from older versions.
 - **Putting the cursor in taped text did nothing.** A caret selects no text, so a removal
@@ -99,7 +99,7 @@ shipping. None of it was on the roadmap that morning.
 
 ### Changed
 
-- **A peeked tape keeps a visible grey outline.** Previously it went fully transparent,
+- **A peeked tape keeps a visible gray outline.** Previously it went fully transparent,
   which made it invisible *and* unfindable — with twenty tapes on a page, revealing one
   and scrolling away meant sweeping the page hunting for the hyperlink cursor. The
   outline is generated at the box's real pixel size at the moment you peek it, because a
@@ -178,7 +178,7 @@ First public release. Alpha: it works, it is not finished, and it has not met a 
 
 ### Known Issues
 
-- Corner resize handles keep their aspect ratio; OneNote owns that behaviour and the schema has no aspect property.
+- Corner resize handles keep their aspect ratio; OneNote owns that behavior and the schema has no aspect property.
 - **Zero `InkWord` in 11,685 real ink elements**, so `recognizedText` is unavailable and handwriting
   masking must cluster `InkDrawing` bounding boxes. Unclear whether that is the build, a setting, or an
   artifact of the notebook having been copied.
