@@ -2,8 +2,8 @@
 
 Status: **pre-alpha, Phase 0.** Nothing installable yet.
 
-Source of truth for *why* any of this is shaped the way it is:
-[`origins.md`](origins.md). Architecture: [`design/architecture.md`](design/architecture.md).
+Source of truth for *why* any of this is shaped the way it is: [`origins.md`](origins.md).
+Architecture: [`design/architecture.md`](design/architecture.md).
 
 ---
 
@@ -15,11 +15,11 @@ Let somebody study from their own OneNote notes without leaving OneNote or build
 
 These constrain every decision below.
 
-1. **Never damage someone's notes.** Taping is reversible and non-destructive; the original content and
-   its metadata survive. These are medical school lecture notes. Losing them is the only truly
+1. **Never damage someone's notes.** Taping is reversible and non-destructive; the original content
+   and its metadata survive. These are medical school lecture notes. Losing them is the only truly
    unrecoverable failure this project has.
-2. **Ink is not an edge case.** The target user is on a Surface with a pen. Typed-only is a legitimate
-   *first* milestone, never the finished product.
+2. **Ink is not an edge case.** The target user is on a Surface with a pen. Typed-only is a
+   legitimate *first* milestone, never the finished product.
 3. **The joke is optional; the tool is not.** Mascot and animation ship **off by default** and are
    disableable forever in one click. A study aid that can't be made quiet at 2am is broken.
 4. **No telemetry** without an explicit, documented, opt-in decision. Notes are personal.
@@ -30,8 +30,8 @@ These constrain every decision below.
 > text elements against **11,685** ink and **1,131** images. Phase 1 is typed-text taping and Phase 2 is
 > ink and regions -- backwards for the actual user, who said so independently: *"I'm often covering
 > pictures and printouts."* Evidence:
-> [`analysis/onenote-page-xml-shapes.md`](analysis/onenote-page-xml-shapes.md). Re-sequencing is slice
-> `RT-10` in [`project/RecallTape_Development_Roadmap.md`](project/RecallTape_Development_Roadmap.md).
+> [`analysis/onenote-page-xml-shapes.md`][analysis-onenote]. Re-sequencing is slice
+> `RT-10` in [`project/RecallTape_Development_Roadmap.md`][project-recalltape].
 
 ## Phase 0 — decide and prove (we are here)
 
@@ -44,11 +44,11 @@ before designing on top of it.
       place, or place a cover object over it? Decide for typed text first.
 - [ ] **Spike:** find out what selected **ink** looks like in the page XML, and whether it can be
       masked by the same mechanism. This is the highest-risk unknown in the project.
-- [ ] Decide: fork [OneMore](https://github.com/stevencohn/OneMore), take it as a dependency, or use it
-      as a reference implementation and write a thin host of our own. *(Licence compatibility check
-      required before forking.)*
-- [ ] Confirm the install/trust story for a COM add-in on a normal user's machine — signing, and what
-      SmartScreen does to an unsigned installer.
+- [ ] Decide: fork [OneMore][onemore], take it as a dependency, or use it as a reference
+      implementation and write a thin host of our own. *(Licence compatibility check required before
+      forking.)*
+- [ ] Confirm the install/trust story for a COM add-in on a normal user's machine — signing, and
+      what SmartScreen does to an unsigned installer.
 
 **Exit criterion:** a hotkey in real OneNote that visibly covers a real selection and uncovers it
 again, without eating the content. Ugly is fine. That's the whole bar.
@@ -70,7 +70,8 @@ Cloning Goodnotes' tape gets parity. This is where it becomes something Goodnote
 
 - [ ] Mask **handwriting**
 - [ ] Mask **regions of diagrams** and labels on anatomy images
-- [ ] **Tape all handwriting on this page** (bulk operations — hand-taping fifty terms defeats the point)
+- [ ] **Tape all handwriting on this page** (bulk operations — hand-taping fifty terms defeats the
+      point)
 - [ ] Randomised reveal order
 - [ ] **Study mode** — a focused review pass over a page or section
 - [ ] Hit/miss statistics
@@ -101,8 +102,12 @@ Only meaningful because `RecallTape.Core` never learned what OneNote is.
 ## Open questions
 
 - **Mascot name.** Wilson has said *Forky*; `origins.md` prefers **Tiney** / **Rippy** / **Sal** /
-  **Dork** on the grounds that Forky is generic and strongly associated with a Pixar character. Unresolved
-  — worth settling before it reaches code, assets, or store metadata.
+  **Dork** on the grounds that Forky is generic and strongly associated with a Pixar character.
+  Unresolved — worth settling before it reaches code, assets, or store metadata.
 - **OneMore: fork, depend, or reference?** Blocked on the licence check above.
-- **Where does tape state actually live** — inside the page XML, or beside it? Page XML keeps it with
-  the content and surviving sync; beside it is easier but risks orphaning.
+- **Where does tape state actually live** — inside the page XML, or beside it? Page XML keeps it
+  with the content and surviving sync; beside it is easier but risks orphaning.
+
+[analysis-onenote]: analysis/onenote-page-xml-shapes.md
+[onemore]: https://github.com/stevencohn/OneMore
+[project-recalltape]: project/RecallTape_Development_Roadmap.md

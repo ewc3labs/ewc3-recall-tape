@@ -6,21 +6,30 @@
 
 ---
 
-If by **“tape”** you mean the Goodnotes/Notability-style tool where you drag an opaque strip over an answer and then tap it to reveal it for active recall: **OneNote still does not appear to have a native equivalent.** Humanity gave us AI-generated video before Microsoft gave OneNote a fucking reveal strip. ([Goodnotes Support][1])
+If by **“tape”** you mean the Goodnotes/Notability-style tool where you drag an opaque strip over an
+answer and then tap it to reveal it for active recall: **OneNote still does not appear to have a
+native equivalent.** Humanity gave us AI-generated video before Microsoft gave OneNote a fucking
+reveal strip. ([Goodnotes Support][1])
 
-There are OneNote add-ins like **OneMore** and **Onetastic**, but I’m not finding a current add-in that cleanly adds the same tap-to-hide/tap-to-reveal tape behavior. Their feature sets are more things like macros, formatting, navigation, custom styles, tables, and page tools. ([Onetastic][2])
+There are OneNote add-ins like **OneMore** and **Onetastic**, but I’m not finding a current add-in
+that cleanly adds the same tap-to-hide/tap-to-reveal tape behavior. Their feature sets are more
+things like macros, formatting, navigation, custom styles, tables, and page tools. ([Onetastic][2])
 
 The closest practical OneNote hacks are:
 
-* **Collapseable outlines**: Put the answer underneath a heading/bullet and collapse it. This is probably the best native approximation for typed notes.
-* **Opaque ink/highlighter workaround**: Cover an answer with a thick pen stroke, then erase/undo it. Works, but it is hilariously primitive compared with actual Tape.
-* **Separate question/answer containers**: Put answers indented beneath questions and collapse the hierarchy.
-* **Use OneNote for notes + Anki for retrieval**, which is probably still the cleanest setup for your med-school workflow rather than trying to turn OneNote itself into Dollar Store Anki.
+* **Collapseable outlines**: Put the answer underneath a heading/bullet and collapse it. This is
+  probably the best native approximation for typed notes.
+* **Opaque ink/highlighter workaround**: Cover an answer with a thick pen stroke, then erase/undo
+  it. Works, but it is hilariously primitive compared with actual Tape.
+* **Separate question/answer containers**: Put answers indented beneath questions and collapse the
+  hierarchy.
+* **Use OneNote for notes + Anki for retrieval**, which is probably still the cleanest setup for
+  your med-school workflow rather than trying to turn OneNote itself into Dollar Store Anki.
 
-If what you want is specifically **“I annotate lecture slides in OneNote, then afterward drag tape over labels/answers and tap them during review”**, that exact workflow is worth solving differently. I can dig specifically for a OneNote plugin/script that mimics Goodnotes Tape rather than just generic OneNote add-ins.
-
-[1]: https://support.goodnotes.com/hc/en-us/articles/9489290046607-Toggle-visibility-of-content-with-the-Tape-Tool?utm_source=chatgpt.com "Toggle visibility of content with the Tape Tool"
-[2]: https://getonetastic.com/?utm_source=chatgpt.com "Onetastic for OneNote"
+If what you want is specifically **“I annotate lecture slides in OneNote, then afterward drag tape
+over labels/answers and tap them during review”**, that exact workflow is worth solving differently.
+I can dig specifically for a OneNote plugin/script that mimics Goodnotes Tape rather than just
+generic OneNote add-ins.
 
 ---
 
@@ -28,34 +37,49 @@ If what you want is specifically **“I annotate lecture slides in OneNote, then
 
 ---
 
-If you mean **“could we build a Goodnotes-style Tape feature for OneNote ourselves?”**: surprisingly, yes. The useful version is not a huge project. The *perfect* version is where Microsoft begins charging us rent for living in its undocumented basement.
+If you mean **“could we build a Goodnotes-style Tape feature for OneNote ourselves?”**:
+surprisingly, yes. The useful version is not a huge project. The *perfect* version is where
+Microsoft begins charging us rent for living in its undocumented basement.
 
 For **OneNote desktop on Windows**, I’d rate it like this:
 
 * **3/10 difficulty:** keyboard/script hack that hides and reveals selected text.
 * **5/10:** proper OneNote add-in with a ribbon button + hotkey for “Tape” and “Reveal.”
-* **7–8/10:** true Goodnotes behavior where an opaque rectangle sits exactly over arbitrary text/ink and you can **click the rectangle itself to reveal it**.
+* **7–8/10:** true Goodnotes behavior where an opaque rectangle sits exactly over arbitrary text/ink
+  and you can **click the rectangle itself to reveal it**.
 
-The key distinction is that OneNote actually exposes the page through its desktop API. An add-in can retrieve the current page as XML, including information about the current selection, modify that XML, and send the modified page back with `UpdatePageContent`. ([Microsoft Learn][1]) And we have a very convenient proof that this isn't theoretical: **OneMore is open-source C#**, already hooks into desktop OneNote, adds ribbon commands, context menus, and keyboard shortcuts, and manipulates OneNote pages through that interface. ([GitHub][2])
+The key distinction is that OneNote actually exposes the page through its desktop API. An add-in can
+retrieve the current page as XML, including information about the current selection, modify that
+XML, and send the modified page back with `UpdatePageContent`. ([Microsoft Learn][1]) And we have a
+very convenient proof that this isn't theoretical: **OneMore is open-source C#**, already hooks into
+desktop OneNote, adds ribbon commands, context menus, and keyboard shortcuts, and manipulates
+OneNote pages through that interface. ([GitHub][2])
 
-So I would **not build a OneNote plugin from scratch**. I'd either fork OneMore or use its implementation as the skeleton.
+So I would **not build a OneNote plugin from scratch**. I'd either fork OneMore or use its
+implementation as the skeleton.
 
 A first version could work like this:
 
 > Select something in OneNote → press `Ctrl+Alt+T` → it becomes “taped.”
 
-Internally we'd mark the selected content and make it visually unreadable, probably by manipulating its styling. Then:
+Internally we'd mark the selected content and make it visually unreadable, probably by manipulating
+its styling. Then:
 
 > `Ctrl+Alt+T` on taped material → reveal it
 > `Ctrl+Alt+R` → retape/reveal everything on the page
 
-That version is quite realistic because OneMore already knows how to identify the active page and selected page content and write changes back. ([GitHub][3])
+That version is quite realistic because OneMore already knows how to identify the active page and
+selected page content and write changes back. ([GitHub][3])
 
 Where it gets annoying is your likely ideal:
 
 **You click directly on the black tape strip and the answer appears.**
 
-OneNote's documented desktop object model gives us excellent access to the *contents* of the page, but not a nice supported API for creating arbitrary interactive controls embedded in the normal OneNote canvas. ([Microsoft Learn][1]) Microsoft's modern JavaScript OneNote add-in API doesn't save us either, because Microsoft currently documents those add-ins specifically for **OneNote on the web**, not desktop OneNote. ([Microsoft Learn][4])
+OneNote's documented desktop object model gives us excellent access to the *contents* of the page,
+but not a nice supported API for creating arbitrary interactive controls embedded in the normal
+OneNote canvas. ([Microsoft Learn][1]) Microsoft's modern JavaScript OneNote add-in API doesn't save
+us either, because Microsoft currently documents those add-ins specifically for **OneNote on the
+web**, not desktop OneNote. ([Microsoft Learn][4])
 
 So I think the sweet spot is:
 
@@ -68,36 +92,42 @@ So I think the sweet spot is:
 5. Hit it again to hide it and advance.
 6. Optionally have **Reveal All / Retape All**.
 
-That would actually be *better for active recall* than individually clicking tiny pieces of tape. You could cruise through your OneNote lecture notes with one hand:
+That would actually be *better for active recall* than individually clicking tiny pieces of tape.
+You could cruise through your OneNote lecture notes with one hand:
 
 `Space → answer → Space → answer → Space`
 
-For **typed text only**, I think we could get a prototype working without doing anything particularly insane.
+For **typed text only**, I think we could get a prototype working without doing anything
+particularly insane.
 
-For **arbitrary handwriting/images**, we'd need to investigate exactly how OneNote represents the selected object and whether we want to modify it or place a cover object over it. That's the part where difficulty ramps up.
+For **arbitrary handwriting/images**, we'd need to investigate exactly how OneNote represents the
+selected object and whether we want to modify it or place a cover object over it. That's the part
+where difficulty ramps up.
 
-And importantly, Microsoft explicitly supports retrieving page contents with the current selection identified in the XML, which is basically the foothold we'd need. ([Microsoft Learn][1])
+And importantly, Microsoft explicitly supports retrieving page contents with the current selection
+identified in the XML, which is basically the foothold we'd need. ([Microsoft Learn][1])
 
 So if the target is:
 
-**“I want a hotkey that tapes selected stuff and another hotkey that reveals tapes while I'm studying.”**
+**“I want a hotkey that tapes selected stuff and another hotkey that reveals tapes while I'm
+studying.”**
 
-I would genuinely consider this a **reasonable little C# project**, not some lunatic reverse-engineering expedition. A OneMore-based implementation is probably the route I'd take.
-
-[1]: https://learn.microsoft.com/en-us/office/client-developer/onenote/application-interface-onenote "Application interface (OneNote) | Microsoft Learn"
-[2]: https://github.com/stevencohn/OneMore "GitHub - stevencohn/OneMore: A OneNote add-in with simple, yet powerful and useful features · GitHub"
-[3]: https://github.com/stevencohn/OneMore/blob/main/OneMore/OneNote.cs?utm_source=chatgpt.com "OneMore/OneMore/OneNote.cs at main"
-[4]: https://learn.microsoft.com/en-us/office/dev/add-ins/onenote/onenote-add-ins-programming-overview "OneNote JavaScript API programming overview - Office Add-ins | Microsoft Learn"
+I would genuinely consider this a **reasonable little C# project**, not some lunatic
+reverse-engineering expedition. A OneMore-based implementation is probably the route I'd take.
 
 ---
 
-**Wilson:** This is a chat that Paul sent me. I think we need to add this as an EWC3 Labs open source project. Is there a OneNote add-on marketplace?
+**Wilson:** This is a chat that Paul sent me. I think we need to add this as an EWC3 Labs open
+source project. Is there a OneNote add-on marketplace?
 
 ---
 
 **Sort of — but Microsoft has managed to make it unnecessarily weird.**
 
-There is **not a dedicated “OneNote Add-on Marketplace”** analogous to the VS Code Marketplace. Microsoft’s official distribution channel is now **Microsoft Marketplace** (formerly AppSource/Office Store), and Office applications can surface Marketplace add-ins from inside the app. Microsoft explicitly documents publishing Office add-ins there. ([Microsoft Learn][1])
+There is **not a dedicated “OneNote Add-on Marketplace”** analogous to the VS Code Marketplace.
+Microsoft’s official distribution channel is now **Microsoft Marketplace** (formerly
+AppSource/Office Store), and Office applications can surface Marketplace add-ins from inside the
+app. Microsoft explicitly documents publishing Office add-ins there. ([Microsoft Learn][1])
 
 The catch is the important part:
 
@@ -108,15 +138,20 @@ The catch is the important part:
 | **OneNote on the web**      | Office.js / HTML / CSS / JS        | **Yes** — Microsoft Marketplace                                                  |
 | **OneNote Windows desktop** | Native OneNote COM/API integration | **No useful dedicated marketplace** — traditionally installer/GitHub/vendor site |
 
-Microsoft's current OneNote JavaScript API documentation explicitly says that the Office.js API extends **OneNote on the web**. ([Microsoft Learn][2])
+Microsoft's current OneNote JavaScript API documentation explicitly says that the Office.js API
+extends **OneNote on the web**. ([Microsoft Learn][2])
 
-Meanwhile, Microsoft still documents the native desktop OneNote API, which lets a Windows program retrieve and modify page content and manipulate the OneNote UI. ([Microsoft Learn][3]) That's the ecosystem things like OneMore/Gem inhabit.
+Meanwhile, Microsoft still documents the native desktop OneNote API, which lets a Windows program
+retrieve and modify page content and manipulate the OneNote UI. ([Microsoft Learn][3]) That's the
+ecosystem things like OneMore/Gem inhabit.
 
 So for **EWC3 Labs Tape**, I think the right answer is:
 
 > **Build desktop-first, open-source, GitHub-distributed.**
 
-Not because Marketplace wouldn't be nice, but because **Paul's actual use case is likely OneNote Windows + pen/lecture notes**, and that's exactly where the modern Marketplace model currently screws us.
+Not because Marketplace wouldn't be nice, but because **Paul's actual use case is likely OneNote
+Windows + pen/lecture notes**, and that's exactly where the modern Marketplace model currently
+screws us.
 
 ### And this is actually a damn good EWC3 project
 
@@ -157,9 +192,11 @@ Then Phase 2 gets interesting:
 * spaced-repetition metadata
 * maybe export marked items into Anki
 
-And **that last part is where this stops being “we cloned a Goodnotes feature” and becomes an actual useful open-source learning tool.**
+And **that last part is where this stops being “we cloned a Goodnotes feature” and becomes an actual
+useful open-source learning tool.**
 
-There is also a nice architectural escape hatch. We could keep the actual **Tape model independent of OneNote**:
+There is also a nice architectural escape hatch. We could keep the actual **Tape model independent
+of OneNote**:
 
 ```text
 RecallTape.Core
@@ -189,21 +226,23 @@ RecallTape.PDF
 RecallTape.Web
 ```
 
-Now we're not writing a janky OneNote hack. We're writing an **active-recall masking engine with OneNote as its first host**.
+Now we're not writing a janky OneNote hack. We're writing an **active-recall masking engine with
+OneNote as its first host**.
 
-And for distribution I'd do **GitHub Releases + signed installer** initially. Microsoft calls COM add-ins a legacy Windows-only extensibility model requiring local installation, which fits that distribution model much better than pretending this is a modern Marketplace add-in. ([Microsoft Learn][4])
+And for distribution I'd do **GitHub Releases + signed installer** initially. Microsoft calls COM
+add-ins a legacy Windows-only extensibility model requiring local installation, which fits that
+distribution model much better than pretending this is a modern Marketplace add-in. ([Microsoft
+Learn][4])
 
-If we later want the broader audience, we can build a second **Office.js/web edition** and submit *that* through Microsoft Marketplace. Microsoft already has a current OneNote task-pane-add-in quickstart, updated March 6, 2026, so that path is very much alive. ([Microsoft Learn][5])
+If we later want the broader audience, we can build a second **Office.js/web edition** and submit
+*that* through Microsoft Marketplace. Microsoft already has a current OneNote task-pane-add-in
+quickstart, updated March 6, 2026, so that path is very much alive. ([Microsoft Learn][5])
 
-**I think Paul just accidentally handed EWC3 Labs its first genuinely useful little open-source product.** It solves an extremely understandable problem: *“Goodnotes has Tape. I use OneNote. Why the fuck can't OneNote do this?”*
+**I think Paul just accidentally handed EWC3 Labs its first genuinely useful little open-source
+product.** It solves an extremely understandable problem: *“Goodnotes has Tape. I use OneNote. Why
+the fuck can't OneNote do this?”*
 
 That's a fantastic README opening sentence, frankly. 😆
-
-[1]: https://learn.microsoft.com/en-us/office/dev/add-ins/publish/publish-office-add-ins-to-appsource?utm_source=chatgpt.com "Publish your Office Add-in to Microsoft Marketplace"
-[2]: https://learn.microsoft.com/en-us/office/dev/add-ins/onenote/onenote-add-ins-programming-overview?utm_source=chatgpt.com "OneNote JavaScript API programming overview"
-[3]: https://learn.microsoft.com/en-us/office/client-developer/onenote/onenote-developer-reference?utm_source=chatgpt.com "OneNote developer reference"
-[4]: https://learn.microsoft.com/en-us/office/dev/add-ins/resources/resources-glossary?utm_source=chatgpt.com "Office Add-ins glossary of terms"
-[5]: https://learn.microsoft.com/en-us/office/dev/add-ins/quickstarts/onenote-quickstart?utm_source=chatgpt.com "Build your first OneNote task pane add-in - Office Add-ins"
 
 ---
 
@@ -213,11 +252,15 @@ That's a fantastic README opening sentence, frankly. 😆
 
 😂 **Fair correction.** Not *first*—not remotely.
 
-**Excel Power Query Editor at 5,350 installs and climbing** means EWC3 Labs already has something way more important than “an open-source project”: **evidence that people will install your weirdly specific fixes for Microsoft's missing shit.**
+**Excel Power Query Editor at 5,350 installs and climbing** means EWC3 Labs already has something
+way more important than “an open-source project”: **evidence that people will install your weirdly
+specific fixes for Microsoft's missing shit.**
 
 And actually, that changes how I'd think about RecallTape.
 
-Power Query Editor gives you an existing distribution/reputation flywheel. So this shouldn't be treated as “let's throw another repo on GitHub.” I'd treat it as the next member of an emerging category:
+Power Query Editor gives you an existing distribution/reputation flywheel. So this shouldn't be
+treated as “let's throw another repo on GitHub.” I'd treat it as the next member of an emerging
+category:
 
 > **EWC3 Labs: tools that make Microsoft's power-user products behave like somebody actually uses them.**
 
@@ -229,7 +272,9 @@ There's a coherent product DNA there:
 * package it so normal technical users can actually install it;
 * then let organic search/GitHub/community discovery do its thing.
 
-And **5,350 installs is enough signal that I'd care about naming, packaging, telemetry/privacy policy, signed binaries, screenshots/GIFs, SEO, releases, and upgrade mechanics from day one** for the OneNote project—not “we'll clean that up later.”
+And **5,350 installs is enough signal that I'd care about naming, packaging, telemetry/privacy
+policy, signed binaries, screenshots/GIFs, SEO, releases, and upgrade mechanics from day one** for
+the OneNote project—not “we'll clean that up later.”
 
 Also: Paul finding the problem is a nice origin story.
 
@@ -237,33 +282,47 @@ Also: Paul finding the problem is a nice origin story.
 
 That is substantially better than any marketing department-generated project description.
 
-And yes, I retract the “first genuinely useful product” slander against **Power Query Editor**. The court has found me guilty. 😆
+And yes, I retract the “first genuinely useful product” slander against **Power Query Editor**. The
+court has found me guilty. 😆
 
 ---
 
-**Wilson:** I still can't believe 5000 people installed my wierdly specific nerd tool. Microsoft has Copilot they're putting in everything as...fucking Clippy Redux with a larger brain but still as annoying, and it doesn't understand PQ yet. Meanwhile, my dudes out there are slinging mad PQ data science shit with GH Copilot and Claude Code without cut and paste...which is exactly what they were doing before. I know because I was doing it myself.
+**Wilson:** I still can't believe 5000 people installed my wierdly specific nerd tool. Microsoft has
+Copilot they're putting in everything as...fucking Clippy Redux with a larger brain but still as
+annoying, and it doesn't understand PQ yet. Meanwhile, my dudes out there are slinging mad PQ data
+science shit with GH Copilot and Claude Code without cut and paste...which is exactly what they were
+doing before. I know because I was doing it myself.
 
 ---
 
 Exactly. That’s the part that’s genuinely interesting.
 
-The 5,350 installs aren’t just “people found a nerd tool.” They’re evidence of a **workflow gap big enough that users are routing around Microsoft’s own AI strategy**.
+The 5,350 installs aren’t just “people found a nerd tool.” They’re evidence of a **workflow gap big
+enough that users are routing around Microsoft’s own AI strategy**.
 
-Microsoft is shoving Copilot into the surface area of the app. Fine. But your users don’t need an assistant hovering over Excel asking what they’d like to do. They need their **actual editing environment** to participate in the modern coding loop.
+Microsoft is shoving Copilot into the surface area of the app. Fine. But your users don’t need an
+assistant hovering over Excel asking what they’d like to do. They need their **actual editing
+environment** to participate in the modern coding loop.
 
 Before your tool, the workflow was basically:
 
-`Power Query Editor -> copy M -> paste into external AI/code tool -> edit -> copy back -> paste -> test -> repeat`
+`Power Query Editor -> copy M -> paste into external AI/code tool -> edit -> copy back -> paste ->
+test -> repeat`
 
 That is absurdly primitive once you’ve experienced repo-aware coding agents.
 
-What your thing really does is collapse the boundary between **Power Query as “special Excel feature”** and **Power Query as source code**.
+What your thing really does is collapse the boundary between **Power Query as “special Excel
+feature”** and **Power Query as source code**.
 
 That’s the important distinction.
 
-GH Copilot and Claude Code are already excellent at operating in a world of files, diffs, syntax, context, iteration, search, history, and tooling. Power Query Editor historically traps M code inside this little application-modal terrarium. You gave people a door.
+GH Copilot and Claude Code are already excellent at operating in a world of files, diffs, syntax,
+context, iteration, search, history, and tooling. Power Query Editor historically traps M code
+inside this little application-modal terrarium. You gave people a door.
 
-And of course the people who immediately understand why that matters are exactly the weirdos doing serious PQ work—the analysts/data engineers/power users with 1,400-line M queries and dependency chains that should frankly have their own zip code.
+And of course the people who immediately understand why that matters are exactly the weirdos doing
+serious PQ work—the analysts/data engineers/power users with 1,400-line M queries and dependency
+chains that should frankly have their own zip code.
 
 So the adoption makes sense in retrospect. You hit one of those lovely product situations where:
 
@@ -275,22 +334,28 @@ So the adoption makes sense in retrospect. You hit one of those lovely product s
 
 **Actual user:** “No.”
 
-That’s also why I’d pay attention to the OneNote thing. There may be an EWC3 pattern hiding here that is broader than individual utilities:
+That’s also why I’d pay attention to the OneNote thing. There may be an EWC3 pattern hiding here
+that is broader than individual utilities:
 
 > **Take Microsoft’s closed/specialized editing surfaces and reconnect them to the modern developer/tooling ecosystem—or add the obvious missing capability Microsoft somehow skipped.**
 
 That is a very fertile seam.
 
-Power Query Editor is especially compelling because you weren’t theorizing about a market. You built the thing because **you personally had the pain**, used the same stupid workaround everyone else was using, removed it, and then 5,000+ other people basically raised their hands and said, “Yep. Me too.”
+Power Query Editor is especially compelling because you weren’t theorizing about a market. You built
+the thing because **you personally had the pain**, used the same stupid workaround everyone else was
+using, removed it, and then 5,000+ other people basically raised their hands and said, “Yep. Me
+too.”
 
 That’s about as clean a product signal as you get.
 
 ---
 
-**Wilson:** So. Claude can build this fantastically well, and you and I can strategize the branding, SEO, merch...LOL all that shit. And you check my architecture progress with Claude, as per ushe.
+**Wilson:** So. Claude can build this fantastically well, and you and I can strategize the branding,
+SEO, merch...LOL all that shit. And you check my architecture progress with Claude, as per ushe.
 
 ---
-Absolutely. Claude can be in the machine room writing C# while we do the dangerous part: **turning a useful little hack into a thing people remember, search for, trust, and tell other nerds about.**
+Absolutely. Claude can be in the machine room writing C# while we do the dangerous part: **turning a
+useful little hack into a thing people remember, search for, trust, and tell other nerds about.**
 
 And this one is unusually brandable because the problem is instantly legible.
 
@@ -312,7 +377,8 @@ Then beneath it:
 
 > Hide answers. Reveal them later. Study directly in your notes.
 
-That gives us the human-facing concept immediately, while the implementation can have a more defensible project name.
+That gives us the human-facing concept immediately, while the implementation can have a more
+defensible project name.
 
 ## I’d separate **brand name** from **search language**
 
@@ -327,7 +393,8 @@ Working candidates:
 * **CramTape** — stronger student vibe
 * **Reveal** — elegant but SEO nightmare
 
-I still like **RecallTape** because it describes the mechanism and the purpose without sounding like a Microsoft clone.
+I still like **RecallTape** because it describes the mechanism and the purpose without sounding like
+a Microsoft clone.
 
 Brand:
 
@@ -429,9 +496,11 @@ Put it lower in the README/about page:
 >
 > So we fixed that.
 
-Perfect OSS origin story. Zero fabricated market research. One actual user need followed by engineering.
+Perfect OSS origin story. Zero fabricated market research. One actual user need followed by
+engineering.
 
-And it fits the same pattern behind the Power Query thing: **somebody is already doing the workflow manually because the product boundary is stupid.**
+And it fits the same pattern behind the Power Query thing: **somebody is already doing the workflow
+manually because the product boundary is stupid.**
 
 ## Launch strategy
 
@@ -460,7 +529,8 @@ And every surface uses approximately the same phrase:
 
 > **Goodnotes-style Tape for Microsoft OneNote**
 
-Even if technically we shouldn't make Goodnotes part of the product identity, it's enormously useful **comparative search language**.
+Even if technically we shouldn't make Goodnotes part of the product identity, it's enormously useful
+**comparative search language**.
 
 ## And yes, merch 😂
 
@@ -492,17 +562,21 @@ And the inevitable EWC3 Labs mug:
 
 That last one may actually need to exist independent of RecallTape.
 
-But the genuinely useful thing to do next is build a **mini brand brief before Claude establishes names in namespaces, installers, GitHub repos, icons, manifests, etc.** We should decide:
+But the genuinely useful thing to do next is build a **mini brand brief before Claude establishes
+names in namespaces, installers, GitHub repos, icons, manifests, etc.** We should decide:
 
-**product name → tagline → repo name → executable/add-in name → namespace → package ID → domain/page slug → visual identity → README voice → SEO vocabulary**
+**product name → tagline → repo name → executable/add-in name → namespace → package ID → domain/page
+slug → visual identity → README voice → SEO vocabulary**
 
 *before* those choices calcify in code.
 
-That’s where you and I can save Future Wilson from discovering six months later that the installer is still called `OneNoteTapePoCSetup-x64.exe`. 😆
+That’s where you and I can save Future Wilson from discovering six months later that the installer
+is still called `OneNoteTapePoCSetup-x64.exe`. 😆
 
 ---
 
-**Wilson:** We are TOTALLY going to build an animation of Clippy flying up from the side of the screen and tearing the tape off for you. Then blinking and exploding.
+**Wilson:** We are TOTALLY going to build an animation of Clippy flying up from the side of the
+screen and tearing the tape off for you. Then blinking and exploding.
 
 ---
 
@@ -619,8 +693,7 @@ That’s the kind of absurdity nerd users love.
 
 ## Tone line for the docs
 
-Very important:
-keep the main product page professional-ish, and let this live under:
+Very important: keep the main product page professional-ish, and let this live under:
 
 * **Fun settings**
 * **Experimental**
@@ -659,8 +732,7 @@ That is exactly the right move because:
 2. it is **legally safer** than doing Clippy straight,
 3. and it’s so specifically dumb that it becomes memorable.
 
-A paperclip says “Microsoft parody.”
-A **salad fork with googly eyes and a shit-eating grin** says:
+A paperclip says “Microsoft parody.” A **salad fork with googly eyes and a shit-eating grin** says:
 
 > “This project was built by the correct kind of maniacs.”
 
@@ -727,8 +799,7 @@ This is the right sequence:
 11. fork disappears
 12. answer remains visible
 
-That blink-before-explosion is crucial.
-That’s where the whole joke lives.
+That blink-before-explosion is crucial. That’s where the whole joke lives.
 
 ## Optional sound design
 
@@ -787,8 +858,8 @@ This is where you can be extra annoying in a good way.
 
 ## Branding angle
 
-You do **not** make him the main brand.
-He is the **mascot/easter egg**, not the face of the product.
+You do **not** make him the main brand. He is the **mascot/easter egg**, not the face of the
+product.
 
 So:
 
@@ -803,16 +874,31 @@ He should appear **fast** and leave **fast**.
 
 The joke is funny if it takes like 700–1200 ms total.
 
-If he lingers, users will want to murder him, which, to be fair, is on-brand for office assistants, but still.
+If he lingers, users will want to murder him, which, to be fair, is on-brand for office assistants,
+but still.
 
 ## Final verdict
 
 This is an outstanding idea.
 
-A **googly-eyed salad fork with a smug expression that rips off the tape, blinks, and explodes** is exactly the kind of detail that makes an open-source tool feel like it was made by actual humans instead of a committee of deeply hydrated product managers.
+A **googly-eyed salad fork with a smug expression that rips off the tape, blinks, and explodes** is
+exactly the kind of detail that makes an open-source tool feel like it was made by actual humans
+instead of a committee of deeply hydrated product managers.
 
 If you want, I can do the next step and write:
 
 1. a **full mascot spec for Tiney**,
 2. the **UI copy for the settings/easter egg**, and
 3. a **launch GIF script/storyboard** for the reveal animation.
+
+[1]: https://support.goodnotes.com/hc/en-us/articles/9489290046607-Toggle-visibility-of-content-with-the-Tape-Tool?utm_source=chatgpt.com
+[1]: https://learn.microsoft.com/en-us/office/client-developer/onenote/application-interface-onenote
+[1]: https://learn.microsoft.com/en-us/office/dev/add-ins/publish/publish-office-add-ins-to-appsource?utm_source=chatgpt.com
+[2]: https://getonetastic.com/?utm_source=chatgpt.com
+[2]: https://github.com/stevencohn/OneMore
+[2]: https://learn.microsoft.com/en-us/office/dev/add-ins/onenote/onenote-add-ins-programming-overview?utm_source=chatgpt.com
+[3]: https://github.com/stevencohn/OneMore/blob/main/OneMore/OneNote.cs?utm_source=chatgpt.com
+[3]: https://learn.microsoft.com/en-us/office/client-developer/onenote/onenote-developer-reference?utm_source=chatgpt.com
+[4]: https://learn.microsoft.com/en-us/office/dev/add-ins/onenote/onenote-add-ins-programming-overview
+[4]: https://learn.microsoft.com/en-us/office/dev/add-ins/resources/resources-glossary?utm_source=chatgpt.com
+[5]: https://learn.microsoft.com/en-us/office/dev/add-ins/quickstarts/onenote-quickstart?utm_source=chatgpt.com

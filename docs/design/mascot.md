@@ -8,23 +8,23 @@
 
 ## ⚠️ Naming is UNRESOLVED
 
-Wilson has said **Forky**. `origins.md` argues against it — too generic, and strongly associated with a
-certain Pixar utensil, which is a real consideration for a public repo carrying a studio-adjacent name.
-The alternatives raised there, in rough order of preference:
+Wilson has said **Forky**. `origins.md` argues against it — too generic, and strongly associated
+with a certain Pixar utensil, which is a real consideration for a public repo carrying a
+studio-adjacent name. The alternatives raised there, in rough order of preference:
 
 **Tiney** · **Rippy** · **Sal** · **Dork** · Tines · Forklift · Ripley
 
 **Settle this before the name reaches code, asset filenames, settings copy, or store metadata.**
-Renaming a mascot after release is worse than choosing carefully now. This doc says *"the Assistant"*
-throughout so nothing has to be rewritten when it's decided.
+Renaming a mascot after release is worse than choosing carefully now. This doc says *"the
+Assistant"* throughout so nothing has to be rewritten when it's decided.
 
 ---
 
 ## Character
 
 A **salad fork**. Not a paperclip — a paperclip reads as *Microsoft parody*, while a salad fork with
-googly eyes reads as *built by the correct kind of maniacs*. It is also considerably safer legally, and
-funnier, which is the same argument twice.
+googly eyes reads as *built by the correct kind of maniacs*. It is also considerably safer legally,
+and funnier, which is the same argument twice.
 
 **Design:**
 - small silver salad fork, **four tines**
@@ -62,8 +62,8 @@ The joke is entirely in the timing. Implement the beats in order.
 
 If the animation gets shortened for performance, **the blink and the micro-pause are the last things
 to go, not the first.** Cutting them leaves a fork that rips tape and vanishes, which is merely an
-animation. The comedy is that he stops, looks at you, is visibly pleased with himself, and *only then*
-detonates.
+animation. The comedy is that he stops, looks at you, is visibly pleased with himself, and *only
+then* detonates.
 
 The explosion is **small and cheerful** — not violent. The register is:
 
@@ -82,9 +82,9 @@ The explosion is **small and cheerful** — not violent. The register is:
 
 ## Settings — he must be escapable
 
-**Non-negotiable: off by default, and disableable forever in one click.** Someone cramming for boards
-at 2am must be able to make him stop. A joke you can't get out of is a bug, and it is the single
-fastest way to turn a delightful feature into a one-star review.
+**Non-negotiable: off by default, and disableable forever in one click.** Someone cramming for
+boards at 2am must be able to make him stop. A joke you can't get out of is a bug, and it is the
+single fastest way to turn a delightful feature into a one-star review.
 
 **Reveal Style**
 - `Instant` ← **default**
@@ -113,8 +113,8 @@ user is actually studying, and the first appearance lands as a reward rather tha
 
 ## Branding
 
-**He is not the brand.** RecallTape is a study tool that happens to contain an idiot; it is not
-"the fork app." Keep him out of the primary logo, the extension icon, and the top of the README.
+**He is not the brand.** RecallTape is a study tool that happens to contain an idiot; it is not "the
+fork app." Keep him out of the primary logo, the extension icon, and the top of the README.
 
 Where he belongs: a GIF partway down the README (he is *extremely* good marketing once someone is
 already reading), the settings screen, and the moment of unlock.

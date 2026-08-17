@@ -20,13 +20,13 @@ RecallTape.Anki   ·   RecallTape.PDF   ·   RecallTape.Web
 ```
 
 Masking-for-recall is a general idea: *a region of a document, hidden, revealable, with study state
-attached.* OneNote is the first place we need it, not the only place it makes sense. Keeping the model
-host-free is what lets an Anki exporter, a PDF host, or an Office.js web edition reuse the engine
-instead of reimplementing it.
+attached.* OneNote is the first place we need it, not the only place it makes sense. Keeping the
+model host-free is what lets an Anki exporter, a PDF host, or an Office.js web edition reuse the
+engine instead of reimplementing it.
 
-**This is the project's A.B.S. line** (see `AGENTS.md`). When `Core` starts importing OneNote types —
-and something will always want to, usually for a "quick" reason — that is the bug. Fix it then, not
-"later," because later is when there are three hosts and the leak is load-bearing.
+**This is the project's A.B.S. line** (see `AGENTS.md`). When `Core` starts importing OneNote types
+— and something will always want to, usually for a "quick" reason — that is the bug. Fix it then,
+not "later," because later is when there are three hosts and the leak is load-bearing.
 
 ---
 
@@ -42,20 +42,20 @@ Decided in `origins.md` with citations. Short version:
 | Reaches your **ink** | not meaningfully | **yes** |
 | Where lecture notes actually happen | no | **yes** |
 
-The modern, better-documented, marketplace-friendly API is the one that cannot serve the actual user:
-a medical student taking pen notes on a Surface in a lecture hall. So we take the older API and the
-harder distribution story, because that's where the notes are.
+The modern, better-documented, marketplace-friendly API is the one that cannot serve the actual
+user: a medical student taking pen notes on a Surface in a lecture hall. So we take the older API
+and the harder distribution story, because that's where the notes are.
 
-**The foothold:** the desktop API returns the current page as XML *with the selection identified*, and
-accepts a modified page back via `UpdatePageContent`. That single capability is what makes the whole
-product possible.
+**The foothold:** the desktop API returns the current page as XML *with the selection identified*,
+and accepts a modified page back via `UpdatePageContent`. That single capability is what makes the
+whole product possible.
 
 > ⚠️ **The foothold is narrower than it looks.** On Office **16.0.20228** (Current Channel) OneNote no
 > longer serves *external* automation clients at all: `CoCreateInstance("OneNote.Application")` returns
 > an object whose every method fails `E_FAIL`, and OneNote never registers in the Running Object Table.
 > The foothold exists **only for a registered add-in**. There is no scripting fallback, no external
 > harness, and nothing in this design may assume one. Evidence and reproduction:
-> [`../RAG_Sessions/2026-08-12_OneNote_Desktop_COM_External_Automation_Returns_E_FAIL_On_Current_Channel.md`](../RAG_Sessions/2026-08-12_OneNote_Desktop_COM_External_Automation_Returns_E_FAIL_On_Current_Channel.md).
+> [`../RAG_Sessions/2026-08-12_OneNote_Desktop_COM_External_Automation_Returns_E_FAIL_On_Current_Channel.md`][rag-sessions-2026-08].
 >
 > **Still unproven:** that a `GetPageContent` round-trip succeeds *from inside the add-in surrogate*.
 > Until that is demonstrated, treat the platform as promising rather than settled.
@@ -64,8 +64,8 @@ product possible.
 
 ## How it is actually hosted
 
-The add-in does not run inside `ONENOTE.EXE`. Its `AppID` carries an empty `DllSurrogate`, which moves
-it into the generic `dllhost.exe` COM surrogate — the same arrangement OneMore uses.
+The add-in does not run inside `ONENOTE.EXE`. Its `AppID` carries an empty `DllSurrogate`, which
+moves it into the generic `dllhost.exe` COM surrogate — the same arrangement OneMore uses.
 
 ```mermaid
 flowchart LR
@@ -97,8 +97,9 @@ space, where an unhandled exception takes the host — and the user's notes — 
 process, a crash costs a `dllhost`. It is also the only arrangement observed to work: registered
 plainly in-process, OneNote demotes `LoadBehavior` 3 → 2 and never constructs the class.
 
-**Note where `Core` sits.** It is in the surrogate because everything is, but it is reached only through
-`RecallTape.OneNote`. The process boundary is not the architectural boundary — the A.B.S. line above is.
+**Note where `Core` sits.** It is in the surrogate because everything is, but it is reached only
+through `RecallTape.OneNote`. The process boundary is not the architectural boundary — the A.B.S.
+line above is.
 
 ### Runtime and build
 
@@ -111,17 +112,18 @@ plainly in-process, OneNote demotes `LoadBehavior` 3 → 2 and never constructs 
 
 ## Standing on OneMore
 
-[OneMore](https://github.com/stevencohn/OneMore) (Steven Cohn, open-source C#) already solved add-in
-registration, ribbon integration, hotkeys, and page XML manipulation for desktop OneNote. Rebuilding
-that plumbing to prove a point would be foolish.
+[OneMore][onemore] (Steven Cohn, open-source C#) already solved add-in registration, ribbon
+integration, hotkeys, and page XML manipulation for desktop OneNote. Rebuilding that plumbing to
+prove a point would be foolish.
 
-**Resolved 2026-08-12: reference implementation only.** OneMore is **MPL-2.0**; RecallTape is MIT, and
-HQ treats that as non-negotiable. MPL-2.0 is *file-level* copyleft, so any forked file stays MPL
-permanently. We read it, understand it, and write our own — and credit it prominently, per `AGENTS.md`.
+**Resolved 2026-08-12: reference implementation only.** OneMore is **MPL-2.0**; RecallTape is MIT,
+and HQ treats that as non-negotiable. MPL-2.0 is *file-level* copyleft, so any forked file stays MPL
+permanently. We read it, understand it, and write our own — and credit it prominently, per
+`AGENTS.md`.
 
 A full read of how it works, with diagrams, is in
-[`../analysis/onemore-onenote-interaction.md`](../analysis/onemore-onenote-interaction.md). It is the
-best available documentation of this API, because it is the only one that runs.
+[`../analysis/onemore-onenote-interaction.md`][analysis-onemore]. It is the best available
+documentation of this API, because it is the only one that runs.
 
 ---
 
@@ -135,36 +137,36 @@ StudySession  a pass over a TapeSet — order, position, hits, misses
 Persistence   where tape state lives across sessions
 ```
 
-**The hard part is `Tape.anchor`.** It has to survive the user editing around it, OneNote syncing the
-page, and the page being reopened later. A brittle anchor produces orphaned tape, which looks like data
-loss even when it isn't. Expect to iterate here — and per house method, expect to tear the first
-version out once the failure modes are visible.
+**The hard part is `Tape.anchor`.** It has to survive the user editing around it, OneNote syncing
+the page, and the page being reopened later. A brittle anchor produces orphaned tape, which looks
+like data loss even when it isn't. Expect to iterate here — and per house method, expect to tear the
+first version out once the failure modes are visible.
 
-**`Persistence` is an open question**, deliberately unresolved in `PLAN.md`: tape state inside the page
-XML travels with the content and survives sync, but is fussier to write; state stored beside the page
-is easy and risks orphaning. Decide with a spike, not with an argument.
+**`Persistence` is an open question**, deliberately unresolved in `PLAN.md`: tape state inside the
+page XML travels with the content and survives sync, but is fussier to write; state stored beside
+the page is easy and risks orphaning. Decide with a spike, not with an argument.
 
 ## Non-destructive, always
 
 The original content and its metadata are preserved on tape and restored on removal. Not "usually" —
-always, including when a write fails half-way. Belts and suspenders on anything that rewrites a page:
-these are somebody's notes, and there is no undo button that reaches back to last Tuesday.
+always, including when a write fails half-way. Belts and suspenders on anything that rewrites a
+page: these are somebody's notes, and there is no undo button that reaches back to last Tuesday.
 
-**Concurrency is part of "non-destructive."** `UpdatePageContent` takes an *expectedLastModified* and a
-*force* flag. OneMore passes `DateTime.MinValue` with `force: true`, which disables the check entirely —
-a reasonable call for "the user pressed a button just now."
+**Concurrency is part of "non-destructive."** `UpdatePageContent` takes an *expectedLastModified*
+and a *force* flag. OneMore passes `DateTime.MinValue` with `force: true`, which disables the check
+entirely — a reasonable call for "the user pressed a button just now."
 
 **RecallTape must not copy that.** We write on a study-loop cadence, against pages that sync from a
 Surface, a phone, and a laptop. Last-write-wins is precisely the shape of the bug that silently eats
-somebody's lecture notes. **Pass the real expected-last-modified, handle the mismatch, and force only
-where it can be shown safe.** If that turns out to be unworkable, it is a design decision to be made
-deliberately and written down here — not a default to be inherited.
+somebody's lecture notes. **Pass the real expected-last-modified, handle the mismatch, and force
+only where it can be shown safe.** If that turns out to be unworkable, it is a design decision to be
+made deliberately and written down here — not a default to be inherited.
 
 ## The study loop is keyboard-first
 
-Not a compromise — a design conclusion from `origins.md`. Clicking individual tape strips is fiddly on
-a tablet and slow everywhere. One key that reveals, then retapes and advances, turns a page of notes
-into a loop you can run one-handed without looking down:
+Not a compromise — a design conclusion from `origins.md`. Clicking individual tape strips is fiddly
+on a tablet and slow everywhere. One key that reveals, then retapes and advances, turns a page of
+notes into a loop you can run one-handed without looking down:
 
 ```
 Space → answer → Space → answer → Space
@@ -172,3 +174,7 @@ Space → answer → Space → answer → Space
 
 Direct manipulation of individual strips, if it ever becomes achievable on the desktop canvas, is an
 *addition* to this — never the thing it gets replaced by.
+
+[analysis-onemore]: ../analysis/onemore-onenote-interaction.md
+[onemore]: https://github.com/stevencohn/OneMore
+[rag-sessions-2026-08]: ../RAG_Sessions/2026-08-12_OneNote_Desktop_COM_External_Automation_Returns_E_FAIL_On_Current_Channel.md

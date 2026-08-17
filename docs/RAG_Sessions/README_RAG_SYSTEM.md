@@ -1,13 +1,16 @@
 # RecallTape RAG Documentation System
 
-- **Purpose**: *"Be kind to our future selves"* — durable, shared knowledge management for humans **and** agents
-- **Pattern**: version-controlled repo memory under `/docs/RAG_Sessions/`, separate from any one agent's private memory
+- **Purpose**: *"Be kind to our future selves"* — durable, shared knowledge management for humans
+  **and** agents
+- **Pattern**: version-controlled repo memory under `/docs/RAG_Sessions/`, separate from any one
+  agent's private memory
 
 ---
 
 ## 🎯 What Belongs Here?
 
-Knowledge that must survive session resets, laptop wipes, agent vendor switches, and new contributors.
+Knowledge that must survive session resets, laptop wipes, agent vendor switches, and new
+contributors.
 
 Belongs here:
 
@@ -26,12 +29,13 @@ Does **not** belong here:
 ### Shared vs private memory
 
 `/docs/RAG_Sessions/` is the **shared** surface. Agent-native memory (Claude auto-memory, Copilot
-workspace memory) is a **private, per-user, per-tool cache** — right for preferences and working habits,
-and for **pointers** to these docs.
+workspace memory) is a **private, per-user, per-tool cache** — right for preferences and working
+habits, and for **pointers** to these docs.
 
-**Pointer, not copy.** These docs are the single source of truth for durable technical reasoning. A copy
-drifting inside invisible per-user memory is undetectable and will eventually contradict the repo. If a
-durable insight is found living only in agent memory, promote it here and reduce the memory to a pointer.
+**Pointer, not copy.** These docs are the single source of truth for durable technical reasoning. A
+copy drifting inside invisible per-user memory is undetectable and will eventually contradict the
+repo. If a durable insight is found living only in agent memory, promote it here and reduce the
+memory to a pointer.
 
 ---
 
@@ -40,15 +44,23 @@ durable insight is found living only in agent memory, promote it here and reduce
 ### Canonical Active Sessions (Read First)
 
 1. **OneNote desktop COM: external automation returns E_FAIL on Current Channel 16.0.20228**
-   **File**: `2026-08-12_OneNote_Desktop_COM_External_Automation_Returns_E_FAIL_On_Current_Channel.md`
-   **Use for**: why RecallTape must be a COM add-in in a `dllhost` surrogate and cannot be driven by an external script; the working registration recipe; the diagnostic techniques that found it.
-   **Key Decisions**:
-   - External OneNote automation is dead on this build — no ROT registration, every method returns `E_FAIL`
-   - RecallTape ships as a COM add-in registered into a surrogate; **no external-automation fallback exists to design around**
-   - Target `net48`, not `net8.0` — already present on every Windows box, so no runtime install for a student
-   - **Use the real Office PIAs.** Hand-declared COM interfaces are constructed by OneNote and then never called; `dynamic` fails on `IDispatch::GetTypeInfo`. This reverses the original decision, and the reversal was expensive
+   **File**:
+   `2026-08-12_OneNote_Desktop_COM_External_Automation_Returns_E_FAIL_On_Current_Channel.md` **Use
+   for**: why RecallTape must be a COM add-in in a `dllhost` surrogate and cannot be driven by an
+   external script; the working registration recipe; the diagnostic techniques that found it. **Key
+   Decisions**:
+   - External OneNote automation is dead on this build — no ROT registration, every method returns
+     `E_FAIL`
+   - RecallTape ships as a COM add-in registered into a surrogate; **no external-automation fallback
+     exists to design around**
+   - Target `net48`, not `net8.0` — already present on every Windows box, so no runtime install for
+     a student
+   - **Use the real Office PIAs.** Hand-declared COM interfaces are constructed by OneNote and then
+     never called; `dynamic` fails on `IDispatch::GetTypeInfo`. This reverses the original decision,
+     and the reversal was expensive
    - OneMore is **MPL-2.0** vs our MIT — reference implementation only, never a source of files
-   - **Resolved same day**: the round-trip works from inside the surrogate; only the *caller* is gated
+   - **Resolved same day**: the round-trip works from inside the surrogate; only the *caller* is
+     gated
 
 ### Superseded Sessions (Historical Traceability)
 
@@ -64,8 +76,8 @@ durable insight is found living only in agent memory, promote it here and reduce
 
 **Format**: `YYYY-MM-DD_Descriptive_Title.md`
 
-The filename is the human interface. The architect browses this folder by eye, and the name alone must
-convey *what happened and when* without opening anything. Be generous — prefer
+The filename is the human interface. The architect browses this folder by eye, and the name alone
+must convey *what happened and when* without opening anything. Be generous — prefer
 `2026-08-12_OneNote_Desktop_COM_External_Automation_Returns_E_FAIL_On_Current_Channel.md` over
 `2026-08-12_com_notes.md`. Never trade scannability for brevity.
 
@@ -101,8 +113,8 @@ convey *what happened and when* without opening anything. Be generous — prefer
 - [`docs/PLAN.md`](../PLAN.md) — phased roadmap and non-negotiables
 - [`docs/design/`](../design/) — architecture, and **why**
 - [`docs/analysis/`](../analysis/) — investigation and current-state evidence, notably
-  [`onenote-page-xml-shapes.md`](../analysis/onenote-page-xml-shapes.md) (what the API actually returns)
-  and [`onemore-onenote-interaction.md`](../analysis/onemore-onenote-interaction.md)
+  [`onenote-page-xml-shapes.md`][onenote-page-xml] (what the API actually returns) and
+  [`onemore-onenote-interaction.md`][onemore-onenote]
 - [`docs/project/`](../project/) — roadmap and punchlist: where we are and what is next
 
 **Durable historical context:**
@@ -117,22 +129,26 @@ Repo contracts are the current authority. RAG sessions preserve the *why*; they 
 ## ✍️ Contributing New Sessions
 
 1. Create `YYYY-MM-DD_Descriptive_Title.md` in `/docs/RAG_Sessions/`.
-2. Start from the canonical session template (`templates/docs/template_RAG_session.md` in `ewc3labs-hq`).
-3. Capture the problem, the options considered, the decision, and the lessons — reasoning, not just conclusions.
+2. Start from the canonical session template (`templates/docs/template_RAG_session.md` in
+   `ewc3labs-hq`).
+3. Capture the problem, the options considered, the decision, and the lessons — reasoning, not just
+   conclusions.
 4. Update the index above.
 5. If you keep agent-native memory, store a **pointer** to the doc, never a copy.
 
 **When to write one:** a non-obvious root cause, a multi-hour debug, a design decision with rejected
-alternatives, or a workaround whose reason will be invisible in the code. Routine fixes do not qualify —
-doc spam erodes the corpus.
+alternatives, or a workaround whose reason will be invisible in the code. Routine fixes do not
+qualify — doc spam erodes the corpus.
 
 ---
 
 ## 🔁 Superseded and Archive Standards
 
 - **Canonical** — current starting points; read first.
-- **Superseded** — still explains how the design evolved; stays in `/docs/RAG_Sessions/` with a pointer to its replacement.
-- **Outdated** — design fully replaced; move to `/docs/RAG_Sessions/_ARCHIVE/` and drop from the active lists.
+- **Superseded** — still explains how the design evolved; stays in `/docs/RAG_Sessions/` with a
+  pointer to its replacement.
+- **Outdated** — design fully replaced; move to `/docs/RAG_Sessions/_ARCHIVE/` and drop from the
+  active lists.
 
 ```markdown
 ## Superseded Notice
@@ -164,3 +180,6 @@ Always name the replacement. Never leave ambiguous supersession.
 ---
 
 **Last Updated**: 2026-08-12
+
+[onemore-onenote]: ../analysis/onemore-onenote-interaction.md
+[onenote-page-xml]: ../analysis/onenote-page-xml-shapes.md

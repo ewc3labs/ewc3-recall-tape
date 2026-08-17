@@ -1,0 +1,10 @@
+{
+  "include": ["README.md", "docs/**.md"],
+  "exclude": ["docs/archive/**.md", "docs/scratch/**.md"],
+  "values": {
+    "lastRTNum": { "lastId": { "prefix": "RT" } },
+    "lastRT": { "template": { "text": "RT-${lastRTNum}" } },
+    "lastFIXNum": { "lastId": { "prefix": "FIX" } },
+    "lastFIX": { "template": { "text": "FIX-${lastFIXNum}" } }
+  }
+}

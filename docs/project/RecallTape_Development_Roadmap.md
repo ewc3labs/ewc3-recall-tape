@@ -22,31 +22,47 @@ AsOf: 2026-08-13 (end of session)
 install, use and uninstall without being told anything.
 
 1. `RT-36` `RT-37` `RT-38` — smoke the settings menu, log rolling and new ribbon on a real page
-2. `RT-21` + `RT-22` — signing and a real installer; the zip-and-script story is the weakest part left
+2. `RT-21` + `RT-22` — signing and a real installer; the zip-and-script story is the weakest part
+   left
 3. `RT-08` — progress feedback, so a long Survey does not look frozen
 4. Then bump to `v0.1.0` and go back to the product: `RT-15` + `RT-16`
 
 Parked until after 0.1.0, deliberately: `RT-07` → `RT-20` (anchoring), `RT-26` → `RT-25` (reporter).
 
-## Last Numbers
+## ID Prefixes
 
-Read this **before** minting an ID. It sits above the tables because it is an input to writing one,
+**Read this before minting an ID.** It sits above the tables because it is an input to writing one,
 not a summary of them.
 
-| Series | Last Num | Series Description |
-| --- | --- | --- |
-| RT | RT-45 | RecallTape feature slices and fixes |
+| Prefix | Scope | Owner | Last Used | Series |
+| --- | --- | --- | --- | --- |
+| RT | global | ewc3-recall-tape | <!--ewc3:lastRT-->RT-45<!--/ewc3:lastRT--> | RecallTape feature slices and fixes |
+| FIX | repo-local | ewc3-recall-tape | <!--ewc3:lastFIX-->FIX-0<!--/ewc3:lastFIX--> | small corrections not worth a slice |
 
-`Last Num` is a cache over the Delivery Index, not a second source of truth — the IDs in the tables are
-authoritative. When minting, take the next number **and** confirm it is unused across every sub-table,
-then bump this cell in the same edit.
+**Last Used is derived** from the ID tables below by `ewc3-docs values`, and CI fails if it is
+stale. That matters more than it sounds: this cell is the INPUT to minting an ID, not a summary of
+one, so when it drifts the next person takes a number that is already taken and nothing complains.
+EPQE's read `PQ-31` while `PQ-32` through `PQ-34` existed below it, which is what prompted
+automating it. **Max, not a count** — counting rows agrees with the highest ID only while a series
+is contiguous.
+
+**A global prefix belongs to exactly one roadmap** across all of EWC3 Labs, so a reference points
+somewhere unambiguous. See the [prefix registry][prefix-registry] in HQ.
+
+**`FIX` is repo-local, and that is canon.** Every roadmap owns its own `FIX` series, so `FIX-3` here
+is a different thing from `FIX-3` elsewhere — safe, because a fix is never referenced from outside
+the repository it fixes.
+
+`ewc3-docs series` enforces both rules: it fails if this roadmap uses a prefix it has not declared,
+or if another roadmap claims the same global one.
 
 ## Delivery Index
 
 **Rows are one line.** `Doc` pins a filename; anything wanting a paragraph wants a slice doc.
 
-States: `⬜ planned` · `🟨 coded` — built and deployed, nobody has used it yet · `💨 proven` — someone
-used it and it worked. `🟨` is not a lesser `💨`; it is an admission that we do not know yet.
+States: `⬜ planned` · `🟨 coded` — built and deployed, nobody has used it yet · `💨 proven` —
+someone used it and it worked. `🟨` is not a lesser `💨`; it is an admission that we do not know
+yet.
 
 ### Proven
 
@@ -129,30 +145,38 @@ used it and it worked. `🟨` is not a lesser `💨`; it is an admission that we
 | RT-09 | ⏸️ deferred | The Assistant, as a click-through overlay window | XL | — | deferred — after the tool is good; name unresolved |
 | RT-29 | 🟥 canceled | Free the corner handles from aspect ratio | S | — | not ours — no aspect property exists in the schema |
 
-**States:** ⬜ `planned` · 🟦 `coded` · 💨 `proven` (actually run and observed) · 🟩 `shipped` ·
-🟧 `blocked` · ⏸️ `deferred` · 🟥 `canceled`
+**States:** ⬜ `planned` · 🟦 `coded` · 💨 `proven` (actually run and observed) · 🟩 `shipped` · 🟧
+`blocked` · ⏸️ `deferred` · 🟥 `canceled`
 
-**Est:** `S` an hour or two · `M` a session · `L` several sessions · `XL` a project in itself.
-Day counts were fake precision — five slices landed in a single day while wearing "1d" and "3d"
-labels that meant nothing. Sizes are for spotting what is big, not for scheduling.
+**Est:** `S` an hour or two · `M` a session · `L` several sessions · `XL` a project in itself. Day
+counts were fake precision — five slices landed in a single day while wearing "1d" and "3d" labels
+that meant nothing. Sizes are for spotting what is big, not for scheduling.
 
-`Status`: `pending` · `started YYYY-MM-DD` · `proven YYYY-MM-DD` · `shipped YYYY-MM-DD` ·
-`deferred — {condition}` · `blocked on {who/what}` · `seen again YYYY-MM-DD`
+`Status`: `pending` · `started YYYY-MM-DD` · `proven YYYY-MM-DD` · `shipped YYYY-MM-DD` · `deferred
+— {condition}` · `blocked on {who/what}` · `seen again YYYY-MM-DD`
 
 ## Working Rules
 
 - The roadmap is the single planning surface and owns the status of everything minted into it.
-- New work arrives via [`RecallTape_Checkin_Punchlist.md`](RecallTape_Checkin_Punchlist.md) and is
-  promoted here once the problem is understood well enough to describe with receipts.
+- New work arrives via [`RecallTape_Checkin_Punchlist.md`][recalltape-checkin] and is promoted here
+  once the problem is understood well enough to describe with receipts.
 - Backlogging = state `⏸️ deferred`, with the admission condition in `Status`.
 - Technical detail lives in `docs/design/` and `docs/analysis/`; rows link, they do not duplicate.
 - Load the `ewc3labs-project-roadmap` skill before structural edits.
 
 ## Related Documentation
 
-- **[What OneNote page XML actually contains](../analysis/onenote-page-xml-shapes.md)** | [GitHub Link 🔗](https://github.com/ewc3labs/ewc3-recall-tape/blob/main/docs/analysis/onenote-page-xml-shapes.md)
+- **[What OneNote page XML actually contains][what-onenote-page]** | [GitHub Link 🔗][github-link]
   - *The measured receipts behind most of the Content types section.*
-- **[How OneMore talks to OneNote](../analysis/onemore-onenote-interaction.md)** | [GitHub Link 🔗](https://github.com/ewc3labs/ewc3-recall-tape/blob/main/docs/analysis/onemore-onenote-interaction.md)
+- **[How OneMore talks to OneNote][how-onemore-talks-to]** | [GitHub Link 🔗][github-link-2]
   - *The reference implementation, and what we take from it.*
-- **[PLAN.md](../PLAN.md)** | [GitHub Link 🔗](https://github.com/ewc3labs/ewc3-recall-tape/blob/main/docs/PLAN.md)
+- **[PLAN.md](../PLAN.md)** | [GitHub Link 🔗][github-link-3]
   - *Phases and non-negotiables. RT-10 re-sequences it.*
+
+[github-link]: https://github.com/ewc3labs/ewc3-recall-tape/blob/main/docs/analysis/onenote-page-xml-shapes.md
+[github-link-2]: https://github.com/ewc3labs/ewc3-recall-tape/blob/main/docs/analysis/onemore-onenote-interaction.md
+[github-link-3]: https://github.com/ewc3labs/ewc3-recall-tape/blob/main/docs/PLAN.md
+[how-onemore-talks-to]: ../analysis/onemore-onenote-interaction.md
+[prefix-registry]: https://github.com/ewc3labs/ewc3labs-hq
+[recalltape-checkin]: RecallTape_Checkin_Punchlist.md
+[what-onenote-page]: ../analysis/onenote-page-xml-shapes.md

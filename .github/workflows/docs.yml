@@ -1,0 +1,43 @@
+# Documentation checks.
+#
+# SEPARATE FROM ci.yml because that one builds a .NET add-in on windows-latest, and none of this
+# needs Windows or the SDK. This runs on ubuntu in about twenty seconds.
+#
+# There is no package.json in this repository - it is a C#/OneNote add-in - so the toolkit is run
+# straight from its repo with npx rather than installed as a devDependency.
+
+name: Docs
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "**.md"
+      - "docs/**"
+      - ".ewc3-docs.json"
+      - ".github/workflows/docs.yml"
+  pull_request:
+    paths:
+      - "**.md"
+      - "docs/**"
+      - ".ewc3-docs.json"
+
+jobs:
+  docs:
+    name: Check documentation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      # Four things, all of which fail silently in real life:
+      #   - prose that is not wrapped to render width
+      #   - dead links, wrong-case links, undefined references, orphaned documents
+      #   - a computed number that no longer matches what it counts
+      #   - an ID prefix this roadmap has not declared it owns, or one claimed by two roadmaps
+      - name: Check documentation
+        run: npx --yes github:ewc3labs/ewc3-docs-tools check
