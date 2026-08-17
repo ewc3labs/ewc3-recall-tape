@@ -306,8 +306,7 @@ environment** to participate in the modern coding loop.
 
 Before your tool, the workflow was basically:
 
-`Power Query Editor -> copy M -> paste into external AI/code tool -> edit -> copy back -> paste ->
-test -> repeat`
+`Power Query Editor -> copy M -> paste into external AI/code tool -> edit -> copy back -> paste -> test -> repeat`
 
 That is absurdly primitive once you’ve experienced repo-aware coding agents.
 

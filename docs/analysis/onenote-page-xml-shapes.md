@@ -51,8 +51,8 @@ flowchart TD
 **Flow content** — typed text — lives *inside* an `Outline`. The `T` has no coordinates; OneNote
 lays it out. Masking it means acting on the content.
 
-**Positioned content** — ink and images — lives at **page level**, each with absolute `Position(x,
-y, z)` and `Size(width, height)`. Masking it means acting on coordinates.
+**Positioned content** — ink and images — lives at **page level**, each with absolute
+`Position(x, y, z)` and `Size(width, height)`. Masking it means acting on coordinates.
 
 `docs/design/architecture.md` modeled `Tape.anchor` as one thing. **It is two.** A design that only
 anchors into content cannot mask an image, and a design that only anchors to coordinates cannot
@@ -386,10 +386,10 @@ So we will tape conflicted pages blind. What is unknown, and worth an hour befor
 
 Two properties bear on it, and only one is settled:
 
-- **Optimistic concurrency, already on.** We pass the real `expectedLastModified` with `force:
-  false`, so OneNote refuses a stale write rather than clobbering — the reason we declined OneMore's
-  `DateTime.MinValue` + `force: true`. This protects against overwriting a change we did not see. It
-  says nothing about conflict resolution, which happens below us.
+- **Optimistic concurrency, already on.** We pass the real `expectedLastModified` with
+  `force: false`, so OneNote refuses a stale write rather than clobbering — the reason we declined
+  OneMore's `DateTime.MinValue` + `force: true`. This protects against overwriting a change we did
+  not see. It says nothing about conflict resolution, which happens below us.
 - **We write the whole page back.** `UpdatePageContent` takes the entire page, so taping one word
   rewrites every element on a lecture page. This has not been shown to cause anything. It is simply
   a larger footprint than the change deserves, and a larger footprint is a worse position from which

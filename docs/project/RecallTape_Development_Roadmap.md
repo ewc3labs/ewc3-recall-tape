@@ -152,8 +152,8 @@ yet.
 counts were fake precision — five slices landed in a single day while wearing "1d" and "3d" labels
 that meant nothing. Sizes are for spotting what is big, not for scheduling.
 
-`Status`: `pending` · `started YYYY-MM-DD` · `proven YYYY-MM-DD` · `shipped YYYY-MM-DD` · `deferred
-— {condition}` · `blocked on {who/what}` · `seen again YYYY-MM-DD`
+`Status`: `pending` · `started YYYY-MM-DD` · `proven YYYY-MM-DD` · `shipped YYYY-MM-DD` ·
+`deferred — {condition}` · `blocked on {who/what}` · `seen again YYYY-MM-DD`
 
 ## Working Rules
 

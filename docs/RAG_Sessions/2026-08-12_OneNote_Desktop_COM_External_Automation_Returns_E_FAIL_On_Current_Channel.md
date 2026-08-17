@@ -189,11 +189,11 @@ produces the identical pair and works.**
 - **Documentation is not a running system.** `origins.md` cited Microsoft's own docs saying the
   desktop API works. It is still documented. It no longer answers external callers. The citations
   were correct and the conclusion was stale, and only running code could tell the difference.
-- **A version string is not proof of a working API.** OneMore's startup log prints `OneNote 15.0
-  (16.0.20228.20158 x64)` and it was briefly taken as evidence the API worked. It is not: the
-  version comes from `HKCR\OneNote.Application\CurVer` and the build from `ONENOTE.EXE`'s file
-  header. Both local reads. **Check what a log line is actually made of before resting a decision on
-  it.**
+- **A version string is not proof of a working API.** OneMore's startup log prints
+  `OneNote 15.0 (16.0.20228.20158 x64)` and it was briefly taken as evidence the API worked. It is
+  not: the version comes from `HKCR\OneNote.Application\CurVer` and the build from `ONENOTE.EXE`'s
+  file header. Both local reads. **Check what a log line is actually made of before resting a
+  decision on it.**
 - **Bring a control group.** Excel and Word answering normally in the same script, same minute, is
   what turned "my harness is broken" into "OneNote is broken" in one step.
 - **Find the call with the fewest dependencies.** `GetSpecialLocation` returns a folder path — no
