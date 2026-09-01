@@ -130,7 +130,7 @@ yet.
 
 | ID | State | Slice | Est | Doc | Status |
 | --- | --- | --- | --- | --- | --- |
-| RT-21 | ⬜ planned | Code signing, so SmartScreen stops warning | M | — | needs a certificate; costs money |
+| RT-21 | ⬜ planned | Code signing, so SmartScreen stops warning | M | — | **cheaper than assumed.** Azure Trusted Signing is ~$10/month with no hardware token — verified against ScreenToGif's installer, whose cert is Microsoft-issued with a **3-day** lifetime, timestamped so it stays valid. Price is no longer the blocker; eligibility is. Also covers the add-in itself, which an org enforcing *Require Application Add-ins to be signed* will otherwise refuse to load at all — a harder failure than a SmartScreen prompt |
 | RT-22 | ⬜ planned | MSI installer to replace zip + script | L | — | after RT-21; WiX headless, per-machine like OneMore |
 | RT-36 | 🟨 coded | Settings menu; developer tools off by default | M | — | ribbon menu, not a dialog; HKCU-backed |
 | RT-38 | 🟨 coded | Ribbon laid out for reach, with icons that render | S | — | Tape large and rightmost; icon browser found them |
