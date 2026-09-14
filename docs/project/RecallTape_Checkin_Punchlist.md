@@ -183,6 +183,7 @@ search the roadmap **including Parked / Retired** — the same thing gets notice
       deny-only, so the `AU` ace is what actually grants it. Neither change is verified on real
       ARM64 hardware yet.
 - [ ] Verify on Paul's Surface: does the add-in load, and does click-to-peek work, on real ARM64?
+      Load **confirmed 2026-08-13** [RT-23]; click-to-peek on ARM64 is still not recorded.
 - [ ] `Ctrl+Alt+T` on non-US layouts — still unchecked, and now more urgent since the target user
       has a Surface, not the keyboard we test on.
 - [x] Could not disable RecallTape from OneNote's COM Add-ins dialog without running OneNote
@@ -203,8 +204,9 @@ search the roadmap **including Parked / Retired** — the same thing gets notice
       zip are blocked by execution policy — two obstacles between a med student and a study tool.
       Added `Install RecallTape.cmd` / `Uninstall RecallTape.cmd`, which self-elevate, unblock, and
       run with a per-process policy override. Double-click, accept UAC, done.
-- [ ] Nobody has installed RecallTape from a release zip successfully yet. [RT-14] stays open until
-      someone has, on a machine that is not the one it was built on.
+- [x] Nobody has installed RecallTape from a release zip successfully yet. [RT-14] stays open until
+      someone has, on a machine that is not the one it was built on. **Closed 2026-08-13** — Paul,
+      on his Surface; see the check-in above.
 - [ ] Do `OCRToken` coordinates share the page coordinate space or are they image-relative? Must be
       settled before any overlay is placed from them.
 - [ ] `Ctrl+Alt+T` collides with `AltGr` on Italian/UK keyboard layouts — check before it reaches a
