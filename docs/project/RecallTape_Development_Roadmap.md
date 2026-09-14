@@ -21,7 +21,8 @@ AsOf: 2026-09-14 (states re-judged against the new legend)
 **Productization, then `v0.1.0`.** Creature features wait; the goal is software a stranger can
 install, use and uninstall without being told anything.
 
-1. `RT-36` `RT-37` `RT-38` — smoke the settings menu, log rolling and new ribbon on a real page
+1. `RT-37` — watch the log actually roll at its size limit; the only unobserved part of the settings
+   work
 2. `RT-21` + `RT-22` — signing and a real installer; the zip-and-script story is the weakest part
    left
 3. `RT-08` — progress feedback, so a long Survey does not look frozen
@@ -147,10 +148,10 @@ counts are fake precision on a project nobody is scheduling. Sizes are for spott
 | RT-12 | 🟩 proven | Re-read the page timestamp before every write | S | — | proven 2026-08-13 — Wilson's PC, OneNote, 5 tapes in one pass |
 | RT-34 | 🟦 tested | Remove tape from the caret, not only a selection | S | — | tested 2026-08-13 — against a captured page dump; live use never recorded |
 | RT-32 | ⬜ planned | Survive taping a page that is in sync conflict | M | — | API cannot see conflict state at all |
-| RT-20 | ⬜ planned | Anchor tapes to an object, move them when it moves | M | — | blocked in practice by RT-07 |
+| RT-20 | ⬜ planned | Anchor tapes to an object, move them when it moves | M | — | needs RT-07's answer first |
 | RT-07 | ⬜ planned | Does objectID survive a sync round-trip | S | — | now testable — 2 machines share a notebook |
 | RT-08 | ⬜ planned | Progress feedback for long operations | S | — | Survey looks frozen on a big notebook |
-| RT-37 | 🟨 coded | Bounded logs: roll at a size, keep one previous | S | — | size setting smoke-tested 2026-08-13; the roll itself never observed |
+| RT-37 | 🟨 coded | Bounded logs: roll at a size, keep one previous | S | — | only the size picker was smoke-tested 2026-08-13; the roll itself has never run |
 
 ### Shipping
 
