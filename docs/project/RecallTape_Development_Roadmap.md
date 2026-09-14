@@ -89,8 +89,8 @@ report the same thing needs to find it.
 counts are fake precision on a project nobody is scheduling. Sizes are for spotting what is big.
 
 `Status`: `pending` · `started YYYY-MM-DD` · `proven YYYY-MM-DD — {where}` ·
-`deferred — {condition}` · `blocked on {who/what}` · `cancelled — {reverted|refuted|retired}: {why}`
-· `seen again YYYY-MM-DD`
+`done YYYY-MM-DD — {what done means}` · `deferred — {condition}` · `blocked on {who/what}` ·
+`cancelled — {reverted|refuted|retired}: {why}` · `seen again YYYY-MM-DD`
 
 ## Delivery Index
 
