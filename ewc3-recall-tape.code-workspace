@@ -1,0 +1,20 @@
+{
+  "folders": [
+    {
+      "name": "ewc3-recall-tape",
+      "path": "."
+    },
+    {
+      "name": "ewc3-recall-tape.worktrees",
+      "path": "../ewc3-recall-tape.worktrees"
+    },
+    {
+      "name": "ewc3labs-hq",
+      "path": "../../ewc3labs-hq"
+    },
+    {
+      "name": "ewc3labs-hq.worktrees",
+      "path": "../../ewc3labs-hq.worktrees"
+    }
+  ]
+}
