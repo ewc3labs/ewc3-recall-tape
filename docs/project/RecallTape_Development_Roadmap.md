@@ -37,7 +37,7 @@ not a summary of them.
 
 | Prefix | Scope | Owner | Last Used | Series |
 | --- | --- | --- | --- | --- |
-| RT | global | ewc3-recall-tape | <!--ewc3:lastRT-->RT-45<!--/ewc3:lastRT--> | RecallTape feature slices and fixes |
+| RT | global | ewc3-recall-tape | <!--ewc3:lastRT-->RT-46<!--/ewc3:lastRT--> | RecallTape feature slices and fixes |
 | FIX | repo-local | ewc3-recall-tape | <!--ewc3:lastFIX-->FIX-0<!--/ewc3:lastFIX--> | small corrections not worth a slice |
 
 **Last Used is derived** from the ID tables below by `ewc3-docs values`, and CI fails if it is
@@ -166,6 +166,7 @@ counts are fake precision on a project nobody is scheduling. Sizes are for spott
 | RT-38 | 🟦 tested | Ribbon laid out for reach, with icons that render | S | — | tested 2026-08-13 — seen in OneNote; icon browser found them; size='large' is ignored |
 | RT-41 | ⬜ planned | Let users pick their own tape icon | S | — | the browser makes this small; whimsy belongs to them |
 | RT-10 | ⬜ planned | Re-sequence PLAN.md phases to match real notes | S | — | flagged in PLAN.md, not yet done |
+| RT-46 | ⬜ planned | Say which clone layout the workspace assumes | S | [`RT-46_Workspace_Estate_Layout.md`][rt-46-workspace] | Codex misread HQ's path on PR #2 |
 
 ### Parked / Retired
 
@@ -200,4 +201,5 @@ counts are fake precision on a project nobody is scheduling. Sizes are for spott
 [how-onemore-talks-to]: ../analysis/onemore-onenote-interaction.md
 [prefix-registry]: https://github.com/ewc3labs/ewc3labs-hq
 [recalltape-checkin]: RecallTape_Checkin_Punchlist.md
+[rt-46-workspace]: slices/RT-46_Workspace_Estate_Layout.md
 [what-onenote-page]: ../analysis/onenote-page-xml-shapes.md
