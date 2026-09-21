@@ -37,6 +37,24 @@ search the roadmap **including Parked / Retired** — the same thing gets notice
 
 ---
 
+## Check-in — 2026-09-21 (AI tooling writes into the repo)
+
+> Context: the AI Token Optimizer extension generated four files here. Sorting them by what reads
+> them put `.github/copilot-instructions.md` under version control, and the review of that PR
+> found two problems in text the extension owns.
+
+**Items:**
+
+- [ ] The committed Copilot instructions tell any agent to run `rtk git status` and friends. This
+      repo neither vendors nor installs RTK, so a contributor without the extension gets
+      `rtk: command not found` on routine git commands. Codex flagged it on PR #3. Ours to report,
+      not to fix: the text lives between `AI-TOKEN-OPTIMIZER` markers and is rewritten on every
+      workspace open, so the fix belongs in the extension's template. Reported to HQ.
+- [ ] Same file names `semantic_search` and `grep_search`, which are not GitHub Copilot
+      capabilities. Copilot flagged it on PR #3. Same marker problem, same route.
+
+---
+
 ## Check-in — 2026-08-13 (Paul installs it, and immediately wants more)
 
 > Context: v0.0.1 published. Paul installed it himself from the release zip, on his Snapdragon X Elite
