@@ -41,3 +41,13 @@ Thumbs.db
 # lib/README.md. Without this negation the *.dll rule above silently excludes them and a fresh clone
 # cannot compile, which is exactly the failure vendoring was meant to prevent.
 !lib/*.dll
+
+# ---- AI tooling, machine-local -------------------------------------------
+# The AI Token Optimizer extension rewrites these whenever the workspace opens, and they carry
+# per-machine settings. AGENTS.md is the committed contract, and .github/copilot-instructions.md
+# is tracked because GitHub reads it server-side; both are generic and reviewed before landing.
+CLAUDE.md
+.codex/
+.cavemanrc
+.aicache/
+.codegraph/
