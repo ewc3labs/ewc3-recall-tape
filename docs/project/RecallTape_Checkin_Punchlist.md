@@ -37,6 +37,33 @@ search the roadmap **including Parked / Retired** — the same thing gets notice
 
 ---
 
+## Check-in — 2026-11-17 (the optimizer comes back out)
+
+> Context: HQ tore the AI Token Optimizer stack out fleet-wide and uninstalled the extension from
+> both VS Code builds. The decision below, on 2026-09-21, stands as what we knew then; this reverses
+> it.
+
+**Decisions (HQ + RT, 2026-11-17):**
+
+- `.github/copilot-instructions.md` is **deleted, not edited**. One authored heading sat above the
+  markers and nothing below them, so the file was the generated artifact rather than a file
+  containing one. Nothing was ours to keep.
+- The `.gitignore` entries that existed to hide that extension's output are **gone too**. With
+  nothing generating them, an ignore rule would hide a reappearance — and a reappearance is the
+  signal that something is still installed somewhere.
+
+**Items:**
+
+- [x] Six weeks of agents were told to run `rtk git status` after the binary stopped existing, here
+      and globally in `~/.claude/RTK.md`. The lesson is not about one extension: **a generated block
+      in a tracked file keeps giving instructions long after the thing that wrote it is gone**, and
+      nothing in the repo can correct it. HQ put that rule in `template_AGENTS.md` in general terms.
+- [ ] `.cavemanrc` was still sitting in the working tree after the sweep, gitignored and therefore
+      invisible. Deleted locally. Worth remembering that *ignored* and *gone* look identical from
+      `git status`.
+
+---
+
 ## Check-in — 2026-09-21 (AI tooling writes into the repo)
 
 > Context: the AI Token Optimizer extension generated four files here. Sorting them by what reads
@@ -45,13 +72,16 @@ search the roadmap **including Parked / Retired** — the same thing gets notice
 
 **Items:**
 
-- [ ] The committed Copilot instructions tell any agent to run `rtk git status` and friends. This
+- [x] The committed Copilot instructions tell any agent to run `rtk git status` and friends. This
       repo neither vendors nor installs RTK, so a contributor without the extension gets
       `rtk: command not found` on routine git commands. Codex flagged it on PR #3. Ours to report,
       not to fix: the text lives between `AI-TOKEN-OPTIMIZER` markers and is rewritten on every
-      workspace open, so the fix belongs in the extension's template. Reported to HQ.
-- [ ] Same file names `semantic_search` and `grep_search`, which are not GitHub Copilot
-      capabilities. Copilot flagged it on PR #3. Same marker problem, same route.
+      workspace open, so the fix belongs in the extension's template. Reported to HQ. **Resolved
+      2026-11-17 by deleting the file** — see the check-in above. The report was right and the route
+      was wrong: it was never fixable upstream, because the whole file was the artifact.
+- [x] Same file names `semantic_search` and `grep_search`, which are not GitHub Copilot
+      capabilities. Copilot flagged it on PR #3. Same marker problem, same route. **Resolved
+      2026-11-17 by deleting the file.**
 
 ---
 
